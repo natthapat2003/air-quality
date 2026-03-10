@@ -1,0 +1,98 @@
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+.spin-icon {
+    animation: spin 1s linear infinite;
+}
+
+/* 📱 สำหรับหน้าจอมือถือ (กว้างไม่เกิน 768px) */
+@media (max-width: 768px) {
+    /* --- 1. แถบเมนู Navbar (ใช้ร่วมกันทุกหน้า) --- */
+    .navbar { padding: 10px 12px !important; }
+    .brand-text, .live-clock, .nav-divider, .status-text { display: none !important; } 
+    
+    .nav-links { gap: 4px !important; }
+    .nav-item { 
+        font-size: 11.5px !important; 
+        padding: 6px 8px !important; 
+        white-space: nowrap !important;
+    }
+    .nav-item svg { width: 14px !important; height: 14px !important; }
+    
+    /* ย่อปุ่มสถานะและปุ่ม Login/Logout ให้เหลือแต่ไอคอน */
+    .status-pill { padding: 8px !important; border-radius: 50% !important; }
+    .btn-login span, .btn-logout span { display: none !important; }
+    .btn-login, .btn-logout { padding: 8px !important; border-radius: 50% !important; justify-content: center; }
+
+    /* --- 2. หน้า Map (หน้าแรก) --- */
+    .map-toolbar { top: 70px !important; left: 10px !important; gap: 8px !important; }
+    .map-toolbar button { width: 40px !important; height: 40px !important; }
+    .map-toolbar svg { width: 20px !important; height: 20px !important; }
+    
+    .map-legend { 
+        bottom: 15px !important; left: 10px !important; padding: 12px !important; 
+        transform: scale(0.85); transform-origin: bottom left; gap: 10px !important;
+    }
+
+    .responsive-panel {
+        width: calc(100% - 24px) !important; left: 12px !important; right: 12px !important;
+        top: 70px !important; padding: 16px !important; gap: 14px !important; 
+        max-height: calc(100vh - 90px) !important; border-radius: 20px !important;
+    }
+
+    .pm-container { padding: 16px !important; border-radius: 16px !important; }
+    .pm-circle { width: 100px !important; height: 100px !important; border-width: 8px !important; }
+    .pm-value { font-size: 38px !important; }
+    .pm-unit { font-size: 11px !important; }
+    .status-badge { padding: 4px 20px !important; font-size: 13px !important; margin-top: 15px !important; }
+
+    .weather-grid { gap: 8px !important; }
+    .weather-card { padding: 10px !important; gap: 4px !important; border-radius: 12px !important; }
+    .weather-card-label { font-size: 11.5px !important; }
+    .weather-card-value { font-size: 18px !important; }
+    .weather-card-value span { font-size: 11px !important; }
+
+    .ai-box { padding: 16px !important; border-radius: 16px !important; }
+    .ai-title { font-size: 14px !important; }
+    .ai-content { font-size: 12.5px !important; }
+    .ai-content strong { font-size: 13px !important; }
+
+    /* --- 3. หน้า History & Info (ข้อมูลย้อนหลัง และ เกณฑ์) --- */
+    .container { 
+        padding: 12px !important; 
+        margin-top: 60px !important; /* ดันเนื้อหาลงมาไม่ให้ Navbar บัง */
+    }
+    .card { padding: 16px !important; border-radius: 16px !important; }
+    
+    /* จัดการส่วนหัว (Title & ปุ่ม Export) */
+    .header-row { flex-direction: column !important; align-items: stretch !important; gap: 12px !important; }
+    .header-title h2 { font-size: 18px !important; }
+    
+    /* แถบกรองข้อมูล ให้เลื่อนซ้ายขวาได้ถ้าจอเล็กเกิน */
+    .filter-bar { 
+        width: 100% !important; overflow-x: auto !important; padding: 10px !important; 
+        justify-content: flex-start !important; flex-wrap: nowrap !important;
+    }
+    .filter-bar select, .filter-bar input { font-size: 13px !important; }
+    
+    .action-buttons { flex-wrap: wrap !important; width: 100% !important; gap: 8px !important; }
+    .action-buttons button { flex: 1 !important; min-width: 140px !important; justify-content: center !important; font-size: 13px !important; padding: 10px !important; }
+
+    /* กล่องสถิติ 4 กล่องบน ให้แบ่งเป็น 2 คอลัมน์ */
+    .stats-grid { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+    .stats-grid > div { padding: 12px !important; gap: 6px !important; }
+    .stats-grid > div > div:nth-child(1) { font-size: 12px !important; }
+    .stats-grid > div > div:nth-child(2) { font-size: 22px !important; }
+
+    /* ตารางข้อมูล และกราฟ */
+    .chart-container { height: 300px !important; }
+    .table-responsive { margin-top: 10px !important; border-radius: 12px !important; }
+    .table-responsive th, .table-responsive td { padding: 12px 10px !important; font-size: 13px !important; }
+
+    /* หน้าต่าง Admin Modal */
+    .admin-modal { width: 95% !important; padding: 20px !important; border-radius: 16px !important; }
+    .admin-modal h2 { font-size: 16px !important; }
+    .admin-modal label { font-size: 12px !important; }
+    .admin-modal td, .admin-modal th { padding: 10px 8px !important; font-size: 12px !important; }
+}

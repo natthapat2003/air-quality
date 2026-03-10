@@ -1,0 +1,331 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import "leaflet/dist/leaflet.css";
+
+body { 
+    margin: 0; 
+    font-family: 'Sarabun', sans-serif; 
+    background-color: #f8f9fa; 
+    color: #333;
+}
+
+/* ========================================= */
+/* 1. ส่วนของ Navbar (ดีไซน์ Pro) */
+/* ========================================= */
+.navbar { 
+    height: 72px; 
+    background-color: rgba(255, 255, 255, 0.85); 
+    backdrop-filter: blur(20px); 
+    -webkit-backdrop-filter: blur(20px); 
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8); 
+    box-shadow: 0 4px 30px rgba(0,0,0,0.04); 
+    display: flex; 
+    align-items: center; 
+    justify-content: space-between; 
+    padding: 0 24px; 
+    z-index: 1001; 
+}
+.brand { 
+    font-size: 20px; 
+    font-weight: 900; 
+    color: #0f172a; 
+    display: flex; 
+    align-items: center; 
+    gap: 12px; 
+    letter-spacing: -0.5px;
+}
+.brand-icon {
+    background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+    color: white;
+    padding: 8px;
+    border-radius: 12px;
+    display: flex;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+.nav-right { display: flex; align-items: center; gap: 14px; }
+.nav-links { display: flex; gap: 6px; }
+.nav-item { 
+    text-decoration: none; 
+    color: #64748b; 
+    font-weight: 700; 
+    font-size: 14px; 
+    transition: all 0.2s ease; 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    padding: 8px 16px;
+    border-radius: 12px;
+}
+.nav-item:hover { color: #0f172a; background-color: #f1f5f9; }
+.nav-item.active { color: #2563eb; background-color: #eff6ff; }
+
+.nav-divider {
+    width: 2px;
+    height: 24px;
+    background-color: #e2e8f0;
+    border-radius: 2px;
+    margin: 0 6px;
+}
+
+.live-clock { 
+    font-size: 13.5px; 
+    color: #475569; 
+    font-weight: 700; 
+    background: #f8fafc; 
+    padding: 8px 16px; 
+    border-radius: 12px; 
+    border: 1px solid #e2e8f0; 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+}
+
+.device-status-box { 
+    font-size: 13.5px; 
+    font-weight: 700; 
+    padding: 8px 16px; 
+    border-radius: 12px; 
+    color: white; 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    transition: 0.3s; 
+    box-shadow: 0 4px 12px -2px rgba(0,0,0,0.15); 
+    justify-content: center; 
+}
+.status-online { background: linear-gradient(135deg, #10b981 0%, #059669 100%); } 
+.status-offline { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); } 
+.status-wait { background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%); }    
+
+@keyframes pulse-soft {
+    0% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(1.2); opacity: 0.8; }
+    100% { transform: scale(1); opacity: 1; }
+}
+.pulse-icon { animation: pulse-soft 2s infinite; }
+
+/* ========================================= */
+/* 2. ส่วนของหน้าแรก (Home) */
+/* ========================================= */
+#map { flex-grow: 1; width: 100%; z-index: 1; height: calc(100vh - 72px); }
+.legend-bar { height: 40px; display: flex; width: 100%; font-size: 12px; font-weight: bold; color: #333; text-align: center; z-index: 1002; }
+.tooltip { position: relative; display: flex; align-items: center; justify-content: center; flex: 1; cursor: pointer; color: white; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+.tooltip .tooltiptext { visibility: hidden; width: 300px; background-color: #ffffff; color: #333; text-align: left; border-radius: 10px; padding: 15px; position: absolute; z-index: 1003; bottom: 135%; left: 50%; transform: translateX(-50%); opacity: 0; transition: all 0.3s ease; font-size: 13px; font-weight: normal; text-shadow: none; line-height: 1.6; box-shadow: 0 5px 25px rgba(0,0,0,0.15); white-space: normal; border: 1px solid #f0f0f0; }
+.tooltip .tooltiptext::after { content: ""; position: absolute; top: 100%; left: 50%; margin-left: -8px; border-width: 8px; border-style: solid; border-color: #ffffff transparent transparent transparent; }
+.tooltip:hover .tooltiptext { visibility: visible; opacity: 1; bottom: 125%; }
+.legend-bar .tooltip:first-child .tooltiptext { left: 0; transform: translateX(0); }
+.legend-bar .tooltip:first-child .tooltiptext::after { left: 20px; margin-left: 0; }
+.legend-bar .tooltip:last-child .tooltiptext { left: auto; right: 0; transform: translateX(0); }
+.legend-bar .tooltip:last-child .tooltiptext::after { left: auto; right: 20px; margin-left: 0; }
+.tooltip-header { font-weight: bold; font-size: 15px; margin-bottom: 10px; display: block; border-bottom: 2px solid #007bff; padding-bottom: 5px; color: #007bff; }
+.text-bold { font-weight: bold; color: #000; font-size: 13px; } 
+.tooltip-divider { border: 0; border-top: 1px dashed #ddd; margin: 8px 0; }
+.color-blue { background-color: #33b5e5; }   
+.color-green { background-color: #00C853; }  
+.color-yellow { background-color: #FFD600; color: black; text-shadow: none; } 
+.color-orange { background-color: #FF9100; } 
+.color-red { background-color: #FF3D00; }    
+.aqi-marker { display: flex; justify-content: center; align-items: center; width: 40px !important; height: 40px !important; border-radius: 50%; border: 3px solid white; box-shadow: 0 3px 6px rgba(0,0,0,0.4); font-weight: bold; font-size: 14px; color: white; margin-left: -20px !important; margin-top: -20px !important; }
+.bg-blue { background-color: #33b5e5; } 
+.bg-green { background-color: #00C853; } 
+.bg-yellow { background-color: #FFD600; color: black !important; }
+.bg-orange { background-color: #FF9100; } 
+.bg-red { background-color: #FF3D00; }
+
+/* ========================================= */
+/* 3. ส่วนของหน้า History (ประวัติย้อนหลัง) */
+/* ========================================= */
+.container { max-width: 1200px; margin: 30px auto; padding: 0 20px; }
+.card { background: white; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); padding: 30px; }
+.header-row { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 20px; margin-bottom: 20px; }
+.filter-box { background: #f1f3f5; padding: 10px 15px; border-radius: 8px; display: flex; gap: 10px; align-items: center; }
+.filter-input, select { padding: 8px 12px; border-radius: 6px; border: 1px solid #ced4da; font-family: 'Sarabun'; }
+.action-buttons { display: flex; gap: 10px; }
+.btn-clear { background-color: #ff6b6b; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+.btn-clear:hover { background-color: #fa5252; }
+.btn-export { background-color: #28a745; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; display: flex; align-items: center; gap: 5px; }
+.btn-export:hover { background-color: #218838; }
+.btn-config { background-color: #6c757d; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; transition: 0.2s; }
+.btn-config:hover { background-color: #5a6268; }
+.btn-delete-row { background-color: white; border: 1px solid #ff6b6b; color: #ff6b6b; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; transition: 0.2s; }
+.btn-delete-row:hover { background-color: #ff6b6b; color: white; }
+.stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+.stat-card { background: #fff; border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,0.03); transition: transform 0.2s; }
+.stat-card:hover { transform: translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.08); }
+.stat-title { font-size: 14px; color: #888; margin-bottom: 5px; font-weight: bold; }
+.stat-value { font-size: 28px; font-weight: bold; color: #333; }
+.val-good { color: #00C853; }
+.val-mod { color: #FFD600; }
+.val-unhealthy { color: #FF9100; }
+.chart-container { position: relative; height: 300px; width: 100%; margin-bottom: 30px; padding-bottom: 20px; border-bottom: 1px solid #eee; }
+.table-responsive { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; min-width: 900px; }
+thead { background-color: #e9ecef; }
+th { padding: 15px; text-align: center; font-weight: bold; color: #495057; border-bottom: 2px solid #dee2e6; font-size: 14px; }
+td { padding: 15px; border-bottom: 1px solid #f1f3f5; font-size: 14px; vertical-align: middle; text-align: center; }
+tr:hover { background-color: #f8f9fa; }
+.map-link { color: #007bff; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; }
+.map-link:hover { text-decoration: underline; }
+
+td .status-badge {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: bold;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 90px;
+    box-shadow: none;
+    border: 1px solid transparent;
+}
+td .status-badge.bg-blue { background-color: #e3f2fd; color: #1976d2 !important; border-color: #bbdefb; }
+td .status-badge.bg-green { background-color: #e8f5e9; color: #388e3c !important; border-color: #c8e6c9; }
+td .status-badge.bg-yellow { background-color: #fffde7; color: #fbc02d !important; border-color: #fff9c4; text-shadow: none; }
+td .status-badge.bg-orange { background-color: #fff3e0; color: #f57c00 !important; border-color: #ffe0b2; }
+td .status-badge.bg-red { background-color: #ffebee; color: #d32f2f !important; border-color: #ffcdd2; }
+
+/* ========================================= */
+/* 4. ส่วนของหน้า Info (เกณฑ์คุณภาพอากาศ) */
+/* ========================================= */
+.info-container { max-width: 1000px; margin: 30px auto; padding: 0 20px; }
+.info-card { background: white; border-radius: 15px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); padding: 30px; overflow: hidden; }
+.info-card h2 { text-align: center; margin-bottom: 30px; color: #444; font-size: 24px; font-weight: bold; }
+.info-table { width: 100%; border-collapse: collapse; min-width: 600px; }
+.info-table thead { background-color: #e9ecef; }
+.info-table th { padding: 15px; text-align: left; font-weight: bold; color: #555; font-size: 15px; border-bottom: 2px solid #ddd; }
+.info-table td { padding: 20px 15px; vertical-align: top; border-bottom: 1px solid #eee; line-height: 1.6; }
+.info-table tr:last-child td { border-bottom: none; }
+.color-dot { width: 25px; height: 25px; border-radius: 50%; display: inline-block; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+.dot-blue { background-color: #33b5e5; }
+.dot-green { background-color: #00C853; }
+.dot-yellow { background-color: #FFD600; }
+.dot-orange { background-color: #FF9100; }
+.dot-red { background-color: #FF3D00; }
+.aqi-range { font-weight: bold; font-size: 16px; white-space: nowrap; }
+.meaning { font-weight: bold; font-size: 16px; }
+.info-table ul { margin: 5px 0 0 0; padding-left: 20px; }
+.info-table li { margin-bottom: 5px; }
+.info-table strong { color: #333; }
+
+@media (max-width: 768px) {
+    .info-container { padding: 10px; margin: 10px auto; }
+    .info-card { padding: 15px; overflow-x: auto; }
+    .info-table th, .info-table td { padding: 10px; font-size: 14px; }
+}
+
+/* ========================================= */
+/* 5. ส่วนของหน้า Login (เข้าสู่ระบบ) */
+/* ========================================= */
+.login-wrapper { display: flex; justify-content: center; align-items: center; min-height: 100vh; background-color: #f0f2f5; }
+.login-card { background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); width: 100%; max-width: 350px; text-align: center; }
+.login-card h2 { margin-bottom: 20px; color: #333; font-size: 24px; font-weight: bold; }
+.login-input { width: 100%; padding: 12px; margin-bottom: 15px; border: 1px solid #ddd; border-radius: 5px; box-sizing: border-box; font-family: 'Sarabun'; }
+.btn-submit { width: 100%; padding: 12px; background-color: #007bff; color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; font-size: 16px; margin-top: 10px; transition: 0.2s; }
+.btn-submit:hover { background-color: #0056b3; }
+.back-link { display: block; margin-top: 20px; color: #666; text-decoration: none; font-size: 14px; transition: 0.2s; }
+.back-link:hover { color: #007bff; }
+.error-msg { color: #dc3545; font-size: 14px; margin-top: 10px; font-weight: bold; }
+
+/* ========================================= */
+/* 6. ส่วนของ Legend (แผงสีบอกระดับ) */
+/* ========================================= */
+.legend-container {
+    position: fixed;
+    bottom: 30px;
+    left: 20px;
+    z-index: 1000;
+    width: auto;
+    
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 20px 15px;
+    
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(15px);
+    -webkit-backdrop-filter: blur(15px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    border-radius: 20px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 4px 8px;
+    transition: all 0.2s ease;
+    cursor: default;
+    width: 100%;
+}
+
+.legend-item:hover {
+    transform: translateX(5px);
+    background-color: rgba(255, 255, 255, 0.5);
+    border-radius: 10px;
+}
+
+.legend-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+.legend-label { font-size: 13px; font-weight: 700; color: #4a5568; white-space: nowrap; }
+
+.dot-blue   { background-color: #0ea5e9; box-shadow: 0 0 10px rgba(14, 165, 233, 0.5); }
+.dot-green  { background-color: #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.5); }
+.dot-yellow { background-color: #f59e0b; box-shadow: 0 0 10px rgba(245, 158, 11, 0.5); }
+.dot-orange { background-color: #f97316; box-shadow: 0 0 10px rgba(249, 115, 22, 0.5); }
+.dot-red    { background-color: #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
+
+/* ========================================= */
+/* 7. รองรับการแสดงผลบนมือถือ */
+/* ========================================= */
+@media (max-width: 768px) {
+    .info-panel {
+        top: auto !important;
+        bottom: 0px !important;
+        right: 0px !important;
+        width: 100% !important;
+        max-height: 55vh;
+        overflow-y: auto;
+        border-radius: 24px 24px 0 0 !important;
+        box-shadow: 0 -5px 25px rgba(0,0,0,0.15) !important;
+        background-color: rgba(255, 255, 255, 0.85) !important;
+        backdrop-filter: blur(15px) !important;
+        -webkit-backdrop-filter: blur(15px) !important;
+    }
+    .legend-container { display: none; }
+}
+
+/* ========================================= */
+/* 8. ตกแต่ง Scrollbar สำหรับกล่อง Info Panel */
+/* ========================================= */
+.info-panel::-webkit-scrollbar { width: 6px; }
+.info-panel::-webkit-scrollbar-track { background: transparent; }
+.info-panel::-webkit-scrollbar-thumb { background: rgba(0, 0, 0, 0.15); border-radius: 10px; }
+.info-panel::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.3); }
+
+/* ========================================= */
+/* 9. ปุ่มหาตำแหน่งดีไซน์เป๊ะ (เท่าปุ่ม Zoom) */
+/* ========================================= */
+.find-location-btn {
+    position: fixed;
+    top: 138px;
+    left: 10px;
+    z-index: 1000;
+    width: 30px; 
+    height: 30px;
+    background-color: #fff;
+    border: 2px solid rgba(0,0,0,0.2); 
+    border-radius: 2px; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    cursor: pointer;
+    color: black;
+    transition: background-color 0.1s;
+    user-select: none;
+}
+.find-location-btn:hover { background-color: #f4f4f4; }
+.leaflet-bar { margin-left: 10px !important; margin-top: 10px !important; }
