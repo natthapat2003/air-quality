@@ -56,6 +56,9 @@ export default function HistoryPage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
   
+  // 🛑 เพิ่ม State สำหรับเก็บค่าจุดตรวจวัดที่เลือก
+  const [selectedNodeFilter, setSelectedNodeFilter] = useState('all');
+
   const [filterType, setFilterType] = useState('day');
   const [dateInput, setDateInput] = useState('');
   const [monthInput, setMonthInput] = useState('');
@@ -199,9 +202,11 @@ export default function HistoryPage() {
     return () => { supabase.removeChannel(channel); };
   }, []); 
 
+  // 🛑 เพิ่ม selectedNodeFilter เข้าไปใน Dependencies
   useEffect(() => {
     let result = allData;
 
+    // 1. กรองตามวันที่
     if (filterType === 'day' && dateInput) {
       const [y, m, d] = dateInput.split('-');
       const searchStr = `${d}/${m}/${y}`;
@@ -214,6 +219,11 @@ export default function HistoryPage() {
       const start = new Date(startDate).setHours(0, 0, 0, 0);
       const end = new Date(endDate).setHours(23, 59, 59, 999);
       result = result.filter(item => item.rawDate >= start && item.rawDate <= end);
+    }
+
+    // 2. กรองตามจุดตรวจวัด (NODE)
+    if (selectedNodeFilter !== 'all') {
+      result = result.filter(item => item.deviceId === selectedNodeFilter);
     }
 
     const resultProcessed = result.map((item, index) => {
@@ -230,7 +240,7 @@ export default function HistoryPage() {
 
     setFilteredData(resultProcessed);
     setCurrentPage(1); 
-  }, [allData, filterType, dateInput, monthInput, startDate, endDate]);
+  }, [allData, filterType, dateInput, monthInput, startDate, endDate, selectedNodeFilter]);
 
   const getStats = () => {
     if (filteredData.length === 0) return { avg: '--', max: '--', min: '--', count: 0 };
@@ -494,6 +504,25 @@ export default function HistoryPage() {
                 }}>
                     <Search size={16} color="#64748b" />
                     
+                    {/* 🛑 เพิ่มกล่องเลือกจุดตรวจวัดตรงนี้ */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <MapPin size={16} color="#3b82f6" />
+                        <select 
+                            value={selectedNodeFilter} 
+                            onChange={(e) => setSelectedNodeFilter(e.target.value)}
+                            style={{ border: 'none', background: 'transparent', fontWeight: '700', color: '#0f172a', outline: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px', maxWidth: '150px' }}
+                        >
+                            <option value="all">ทุกจุดตรวจวัด</option>
+                            {uniqueIds.map(id => (
+                                <option key={id as string} value={id as string}>
+                                    {nodeNames[id as string] ? nodeNames[id as string].split('|')[0].trim() : id as string}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+                    <div style={{ width: '1px', height: '24px', backgroundColor: '#cbd5e1', margin: '0 4px' }}></div>
+
                     <select value={filterType} onChange={(e) => setFilterType(e.target.value)} 
                         style={{ border: 'none', background: 'transparent', fontWeight: '700', color: '#334155', outline: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }}>
                         <option value="day">รายวัน</option>
@@ -702,7 +731,6 @@ export default function HistoryPage() {
                                         <td style={{ padding: '16px', color: '#0f172a', fontWeight: '700', fontSize: '15px', textAlign: 'center' }}>{data.humidity != null ? data.humidity.toFixed(0) : '-'}</td>
                                         <td style={{ padding: '16px', color: '#0f172a', fontWeight: '700', fontSize: '15px', textAlign: 'center' }}>{data.pressure > 0 ? data.pressure.toFixed(1) : '-'}</td>
                                         
-                                        {/* 🛑 ส่วนที่แก้ใหม่: ลบ | ทิ้งไปเลย */}
                                         <td style={{ padding: '16px' }}>
                                             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                                                 <MapPin size={18} color="#3b82f6" style={{ flexShrink: 0 }} />
