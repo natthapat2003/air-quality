@@ -4,13 +4,12 @@ import { useEffect, useState, useRef } from 'react';
 import { supabase } from '../lib/supabase'; 
 import Link from 'next/link';
 import ReactMarkdown from 'react-markdown';
-// 🛑 Import ไฟล์ CSS ที่เราเพิ่งแยกออกไป
 import './mobile.css';
 
 import { 
     Target, MapPin, X, Sparkles, Thermometer, Droplets, Gauge, CloudRain, 
     LayoutDashboard, History, Info, Activity, Clock, Wind, WifiOff, Loader,
-    Layers, CheckCircle2
+    Layers, CheckCircle2, ChevronDown
 } from 'lucide-react'; 
 
 const getStatusColor = (pm25: number) => {
@@ -65,7 +64,6 @@ const getAiBoxTheme = (pm25: number) => {
   };
 };
 
-// 🛑 ฟังก์ชันจัดระเบียบตัวหนังสือ (แก้ให้ขนาด สี และความหนาเท่ากันทุกบรรทัด)
 const formatText = (text: string) => {
   if (!text) return "";
   return (
@@ -129,6 +127,11 @@ export default function Home() {
 
   const [mapStyle, setMapStyle] = useState<keyof typeof MAP_STYLES>('street');
   const [showMapMenu, setShowMapMenu] = useState(false);
+  
+  // 🛑 เพิ่ม State สำหรับเปิด/ปิดเมนูโชว์สถานะโหนด
+  const [showStatusMenu, setShowStatusMenu] = useState(false);
+  // 🛑 เพิ่ม State สำหรับกระตุ้นการเช็คออนไลน์แบบ Real-time บนแผนที่
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   const mapRef = useRef<any>(null);
   const markersRef = useRef<Record<string, any>>({}); 
@@ -170,6 +173,11 @@ export default function Home() {
     const timer = setInterval(() => {
       const now = new Date();
       setClock(`${now.toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })} | ${now.toLocaleTimeString('th-TH')}`);
+      
+      // 🛑 กระตุ้นการรีเฟรชแผนที่และสถานะทุกๆ 5 วินาที
+      if (now.getSeconds() % 5 === 0) {
+          setRefreshTrigger(prev => prev + 1);
+      }
     }, 1000);
     return () => clearInterval(timer);
   }, []);
@@ -317,6 +325,13 @@ export default function Home() {
           
           if (hiddenNodes.includes(id)) return;
 
+          // 🛑 [ส่วนนี้ที่ทำให้หมุดหายไปเมื่อออฟไลน์]
+          const nowMs = new Date().getTime();
+          const isNodeOnline = node.created_at ? (nowMs - new Date(node.created_at).getTime()) <= 120000 : false;
+          
+          // ถ้าสถานะเป็นออฟไลน์ ให้ข้ามการวาดหมุดจุดนี้ไปเลย (ทำให้หมุดหาย)
+          if (!isNodeOnline) return;
+
           const latlng: [number, number] = [node.lat || 16.4477, node.lng || 103.5314];
           const isSelected = id === selectedNodeId;
 
@@ -339,7 +354,7 @@ export default function Home() {
           });
           markersRef.current[id] = marker;
       });
-  }, [nodesData, selectedNodeId, nodeNames, siteName, hiddenNodes]); 
+  }, [nodesData, selectedNodeId, nodeNames, siteName, hiddenNodes, refreshTrigger]); // 🛑 ดึง refreshTrigger เข้ามาเพื่อให้แผนที่อัปเดตทุก 5 วินาที
 
   const currentData = nodesData[selectedNodeId] || { 
       pm25: 0, pm10: 0, temperature: 0, humidity: 0, pressure: 0, lat: 16.4477, displayTime: "--:--:--" 
@@ -348,6 +363,14 @@ export default function Home() {
   const finalDisplayName = nodeNames[selectedNodeId] || siteName;
   const statusColor = getStatusColor(currentData.pm25);
   const aiTheme = getAiBoxTheme(currentData.pm25);
+
+  const nowMs = new Date().getTime();
+  const activeNodesCount = Object.values(nodesData).filter((node: any) => {
+      if (!node.created_at) return true;
+      return (nowMs - new Date(node.created_at).getTime()) <= 120000; 
+  }).length;
+  
+  const totalNodesCount = Object.keys(nodesData).length;
 
   const toolButtonStyle = {
     backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)',
@@ -382,16 +405,60 @@ export default function Home() {
               
               <div className="nav-divider"></div> 
               
-              <div className="status-pill" style={{
-                  display: 'flex', alignItems: 'center', gap: '6px',
-                  padding: '6px 14px', borderRadius: '20px',
-                  backgroundColor: !hasInit ? '#fef3c7' : (isOnline ? '#dcfce7' : '#fef2f2'),
-                  color: !hasInit ? '#d97706' : (isOnline ? '#16a34a' : '#dc2626'),
-                  border: `1px solid ${!hasInit ? '#fde68a' : (isOnline ? '#bbf7d0' : '#fecaca')}`,
-                  fontSize: '13px', fontWeight: '800'
-              }}>
-                  {!hasInit ? <Loader size={14} className="spin-icon" /> : (isOnline ? <Activity size={14} strokeWidth={3} className="pulse-icon" /> : <WifiOff size={14} strokeWidth={3} />)}
-                  <span className="status-text">{!hasInit ? 'กำลังเชื่อม...' : (isOnline ? 'ออนไลน์' : 'ออฟไลน์')}</span>
+              {/* 🛑 ส่วนป้ายสถานะที่ถูกครอบด้วยเมนู Dropdown */}
+              <div style={{ position: 'relative' }}>
+                  <div className="status-pill" onClick={() => setShowStatusMenu(!showStatusMenu)} style={{
+                      display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer',
+                      padding: '6px 14px', borderRadius: '20px', transition: '0.2s',
+                      backgroundColor: !hasInit ? '#fef3c7' : (isOnline ? '#dcfce7' : '#fef2f2'),
+                      color: !hasInit ? '#d97706' : (isOnline ? '#16a34a' : '#dc2626'),
+                      border: `1px solid ${!hasInit ? '#fde68a' : (isOnline ? '#bbf7d0' : '#fecaca')}`,
+                      fontSize: '13px', fontWeight: '800'
+                  }}
+                  onMouseOver={(e) => { e.currentTarget.style.transform = 'scale(1.05)'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}>
+                      {!hasInit ? <Loader size={14} className="spin-icon" /> : (isOnline ? <Activity size={14} strokeWidth={3} className="pulse-icon" /> : <WifiOff size={14} strokeWidth={3} />)}
+                      <span className="status-text">
+                          {!hasInit ? 'กำลังเชื่อม...' : (isOnline ? `ออนไลน์ ${activeNodesCount}/${totalNodesCount > 0 ? totalNodesCount : 1} จุด` : 'ออฟไลน์')}
+                      </span>
+                      <ChevronDown size={14} style={{ marginLeft: '2px', opacity: 0.8 }} />
+                  </div>
+
+                  {/* 🛑 เมนูแสดงสถานะรายจุด */}
+                  {showStatusMenu && (
+                      <div style={{
+                          position: 'absolute', top: '100%', right: 0, marginTop: '12px',
+                          backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)',
+                          border: '1px solid rgba(255, 255, 255, 0.8)', borderRadius: '16px',
+                          padding: '16px', width: '280px', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.15)', zIndex: 1002
+                      }}>
+                          <div style={{ fontSize: '12px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <Activity size={14} /> สถานะจุดตรวจวัดทั้งหมด
+                          </div>
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                              {Object.values(nodesData).map((node: any) => {
+                                  const id = node.device_id || 'NODE_01';
+                                  const isNodeOnline = node.created_at ? (new Date().getTime() - new Date(node.created_at).getTime()) <= 120000 : false;
+                                  const dName = nodeNames[id] || id;
+
+                                  return (
+                                      <div key={id} style={{ 
+                                          display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', 
+                                          backgroundColor: isNodeOnline ? '#f0fdf4' : '#fef2f2', borderRadius: '12px', 
+                                          border: `1px solid ${isNodeOnline ? '#bbf7d0' : '#fecaca'}` 
+                                      }}>
+                                          <span style={{ fontSize: '13px', fontWeight: '700', color: '#334155', maxWidth: '160px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                              {dName.split('|')[0].trim()}
+                                          </span>
+                                          <span style={{ fontSize: '11px', fontWeight: '800', color: isNodeOnline ? '#10b981' : '#ef4444', backgroundColor: isNodeOnline ? '#dcfce7' : '#fee2e2', padding: '4px 8px', borderRadius: '8px' }}>
+                                              {isNodeOnline ? 'ONLINE' : 'OFFLINE'}
+                                          </span>
+                                      </div>
+                                  )
+                              })}
+                          </div>
+                      </div>
+                  )}
               </div>
 
               <div id="live-clock" className="live-clock">
@@ -486,7 +553,6 @@ export default function Home() {
             gap: '20px'
         }}>
             
-            {/* 🛑 ส่วนหัวที่แก้ใหม่ จัดกลางทั้งหมด */}
             <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '-5px' }}>
                 <button 
                     onClick={() => setIsPanelVisible(false)}
@@ -510,7 +576,6 @@ export default function Home() {
                     {formatText(finalDisplayName)}
                 </div>
             </div>
-            {/* 🛑 สิ้นสุดส่วนหัวที่แก้ใหม่ */}
 
             <div className="pm-container" style={{ backgroundColor: '#f8fafc', borderRadius: '20px', padding: '24px 20px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div style={{ fontSize: '13px', color: '#64748b', fontWeight: '800', marginBottom: '15px' }}>ดัชนีคุณภาพอากาศ (PM2.5)</div>
