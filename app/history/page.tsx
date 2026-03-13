@@ -54,7 +54,7 @@ export default function HistoryPage() {
   const [allData, setAllData] = useState<any[]>([]);
   const [filteredData, setFilteredData] = useState<any[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
-  const [isLoadingData, setIsLoadingData] = useState(true); // 🛑 เพิ่ม State โหลดข้อมูล
+  const [isLoadingData, setIsLoadingData] = useState(true);
   
   const [filterType, setFilterType] = useState('day');
   const [dateInput, setDateInput] = useState('');
@@ -67,11 +67,9 @@ export default function HistoryPage() {
   const rowsPerPage = 50; 
   
   const [clock, setClock] = useState("กำลังโหลดเวลา...");
-  const [siteName, setSiteName] = useState("จุดตรวจวัดปัจจุบัน");
   const [nodeNames, setNodeNames] = useState<Record<string, string>>({});
 
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
-  const [tempSiteName, setTempSiteName] = useState("");
   const [hiddenNodes, setHiddenNodes] = useState<string[]>([]);
 
   useEffect(() => {
@@ -88,12 +86,6 @@ export default function HistoryPage() {
 
   useEffect(() => {
     const fetchConfig = async () => {
-      const { data: siteData } = await supabase.from('config').select('value').eq('key', 'site_name').single();
-      if (siteData) {
-          setSiteName(siteData.value);
-          setTempSiteName(siteData.value);
-      }
-      
       const { data: hiddenData } = await supabase.from('config').select('value').eq('key', 'hidden_nodes').single();
       if (hiddenData && hiddenData.value) {
           try { setHiddenNodes(JSON.parse(hiddenData.value)); } catch(e) {}
@@ -139,16 +131,14 @@ export default function HistoryPage() {
     return () => clearInterval(timer);
   }, []);
 
-  // 🛑 อัปเกรดระบบดึงข้อมูลให้ทะลุลิมิต 1000 แถว (Chunking Fetch)
   useEffect(() => {
     const fetchHistory = async () => {
       setIsLoadingData(true);
       let allRecords: any[] = [];
       let from = 0;
-      const step = 999; // ดึงทีละ 1000 แถว
+      const step = 999; 
       let isFetching = true;
 
-      // วนลูปดึงจนกว่าข้อมูลจะหมด
       while (isFetching) {
           const { data, error } = await supabase
               .from('sensor_data')
@@ -164,7 +154,6 @@ export default function HistoryPage() {
           if (data && data.length > 0) {
               allRecords = [...allRecords, ...data];
               from += step + 1;
-              // ถ้าดึงมาได้น้อยกว่าที่ขอ แปลว่าข้อมูลหมดแล้ว
               if (data.length <= step) {
                   isFetching = false;
               }
@@ -205,7 +194,7 @@ export default function HistoryPage() {
 
     const channel = supabase.channel('sensor_data_history')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sensor_data' }, () => {
-        fetchHistory(); // โหลดใหม่เมื่อมีข้อมูลเข้า
+        fetchHistory(); 
       }).subscribe();
     return () => { supabase.removeChannel(channel); };
   }, []); 
@@ -364,7 +353,7 @@ export default function HistoryPage() {
     if (filteredData.length === 0) { alert("ไม่มีข้อมูลที่จะ Export"); return; }
     let csvContent = "Date Time,PM2.5,Temperature,Humidity,Pressure,Lat,Lng,Node\n";
     filteredData.forEach(row => {
-      const nodeName = row.deviceId ? (nodeNames[row.deviceId] || row.deviceId) : siteName;
+      const nodeName = row.deviceId ? (nodeNames[row.deviceId] || row.deviceId) : "Unknown Node";
       csvContent += `${row.timestamp},${row.pm25},${row.temperature},${row.humidity},${row.pressure || ''},${row.lat},${row.lng},${nodeName}\n`;
     });
     const blob = new Blob(["\uFEFF" + csvContent], { type: 'text/csv;charset=utf-8;' });
@@ -377,15 +366,6 @@ export default function HistoryPage() {
   };
 
   const uniqueIds = Array.from(new Set(allData.map(d => d.deviceId).filter(id => id)));
-
-  const handleSaveSiteName = async () => {
-      if (!tempSiteName.trim()) return;
-      const { error } = await supabase.from('config').upsert({ key: 'site_name', value: tempSiteName.trim() });
-      if (!error) {
-          alert('✅ บันทึกชื่อสถานที่หลักเรียบร้อย');
-          setSiteName(tempSiteName.trim());
-      }
-  };
 
   const handleSaveNodeName = async (deviceId: string) => {
       const inputElement = document.getElementById(`input-node-${deviceId}`) as HTMLInputElement;
@@ -691,7 +671,7 @@ export default function HistoryPage() {
                         ) : (
                             currentTableData.map((data) => {
                                 const status = getAQIStatus(data.pm25);
-                                const displayName = data.deviceId ? (nodeNames[data.deviceId] || data.deviceId) : siteName;
+                                const displayName = data.deviceId ? (nodeNames[data.deviceId] || data.deviceId) : 'Unknown Node';
                                 
                                 let trendIcon = <span style={{ color: '#94a3b8', display: 'flex' }} title="คงที่"><Minus size={14} strokeWidth={3} /></span>;
                                 if (data.trendDiff > 0) trendIcon = <span style={{ color: '#ef4444', display: 'flex' }} title={`เพิ่มขึ้น ${data.trendDiff} µg/m³`}><TrendingUp size={14} strokeWidth={3} /></span>;
@@ -722,13 +702,20 @@ export default function HistoryPage() {
                                         <td style={{ padding: '16px', color: '#0f172a', fontWeight: '700', fontSize: '15px', textAlign: 'center' }}>{data.humidity != null ? data.humidity.toFixed(0) : '-'}</td>
                                         <td style={{ padding: '16px', color: '#0f172a', fontWeight: '700', fontSize: '15px', textAlign: 'center' }}>{data.pressure > 0 ? data.pressure.toFixed(1) : '-'}</td>
                                         
+                                        {/* 🛑 ส่วนที่แก้ใหม่: ลบ | ทิ้งไปเลย */}
                                         <td style={{ padding: '16px' }}>
-                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                                <MapPin size={16} color="#3b82f6" />
-                                                <span style={{ fontWeight: '700', color: '#3b82f6', fontSize: '14px' }}>
-                                                    {displayName} 
-                                                    {isAdmin && hiddenNodes.includes(data.deviceId) && <span style={{ color: '#ef4444', fontSize: '11px', marginLeft: '6px', fontWeight: '800' }}>(ถูกซ่อน)</span>}
-                                                </span>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                                                <MapPin size={18} color="#3b82f6" style={{ flexShrink: 0 }} />
+                                                <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                                                    {displayName.split('|').map((str: string, index: number) => (
+                                                        <span key={index} style={{ fontWeight: '700', color: '#3b82f6', fontSize: '14px', lineHeight: '1.4' }}>
+                                                            {str.trim()}
+                                                        </span>
+                                                    ))}
+                                                    {isAdmin && hiddenNodes.includes(data.deviceId) && (
+                                                        <span style={{ color: '#ef4444', fontSize: '11px', fontWeight: '800', marginTop: '2px' }}>(ถูกซ่อน)</span>
+                                                    )}
+                                                </div>
                                             </div>
                                         </td>
 
@@ -794,16 +781,6 @@ export default function HistoryPage() {
                     <button onClick={() => setIsSettingsModalOpen(false)} style={{ border: 'none', background: '#f1f5f9', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b', transition: '0.2s' }} onMouseOver={e=>e.currentTarget.style.backgroundColor='#e2e8f0'} onMouseOut={e=>e.currentTarget.style.backgroundColor='#f1f5f9'}>
                         <X size={18} strokeWidth={2.5} />
                     </button>
-                </div>
-
-                <div style={{ marginBottom: '24px', padding: '20px', backgroundColor: '#f8fafc', borderRadius: '16px', border: '1px solid #e2e8f0' }}>
-                    <label style={{ display: 'block', fontSize: '13px', fontWeight: '800', color: '#475569', marginBottom: '8px' }}>ชื่อสถานที่หลัก (Main Site Name)</label>
-                    <div style={{ display: 'flex', gap: '10px' }}>
-                        <input type="text" value={tempSiteName} onChange={(e) => setTempSiteName(e.target.value)} style={{ flex: 1, padding: '12px 16px', borderRadius: '12px', border: '1px solid #cbd5e1', outline: 'none', fontWeight: '700', fontSize: '15px', color: '#0f172a' }} />
-                        <button onClick={handleSaveSiteName} style={{ backgroundColor: '#2563eb', color: 'white', border: 'none', padding: '0 24px', borderRadius: '12px', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: '0.2s', boxShadow: '0 4px 12px rgba(37,99,235,0.2)' }} onMouseOver={e=>e.currentTarget.style.transform='translateY(-2px)'} onMouseOut={e=>e.currentTarget.style.transform='translateY(0)'}>
-                            <Save size={16} strokeWidth={2.5} /> บันทึก
-                        </button>
-                    </div>
                 </div>
 
                 <h3 style={{ fontSize: '16px', fontWeight: '900', color: '#0f172a', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>

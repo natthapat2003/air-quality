@@ -65,14 +65,19 @@ const getAiBoxTheme = (pm25: number) => {
   };
 };
 
+// 🛑 ฟังก์ชันจัดระเบียบตัวหนังสือ (แก้ให้ขนาด สี และความหนาเท่ากันทุกบรรทัด)
 const formatText = (text: string) => {
   if (!text) return "";
-  return text.split('|').map((str, index, array) => (
-    <span key={index}>
-      {str}
-      {index < array.length - 1 && <br />}
-    </span>
-  ));
+  return (
+    <div style={{ fontSize: '18px', fontWeight: '900', color: '#0f172a', lineHeight: '1.4', textAlign: 'center' }}>
+      {text.split('|').map((str, index, array) => (
+        <span key={index}>
+          {str.trim()}
+          {index < array.length - 1 && <br />}
+        </span>
+      ))}
+    </div>
+  );
 };
 
 const WeatherCard = ({ icon, label, value, unit }: any) => (
@@ -481,21 +486,12 @@ export default function Home() {
             gap: '20px'
         }}>
             
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-                <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                    <div style={{ backgroundColor: '#eff6ff', padding: '10px', borderRadius: '14px', color: '#3b82f6', height: 'fit-content', display: 'flex' }}>
-                        <MapPin size={22} strokeWidth={2.5} />
-                    </div>
-                    <div>
-                        <div style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a', lineHeight: '1.3' }}>
-                            {formatText(finalDisplayName)}
-                        </div>
-                    </div>
-                </div>
-                
+            {/* 🛑 ส่วนหัวที่แก้ใหม่ จัดกลางทั้งหมด */}
+            <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '-5px' }}>
                 <button 
                     onClick={() => setIsPanelVisible(false)}
                     style={{ 
+                        position: 'absolute', right: '0', top: '0',
                         backgroundColor: '#f1f5f9', border: 'none', width: '32px', height: '32px', 
                         borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', 
                         color: '#64748b', cursor: 'pointer', transition: 'all 0.2s', flexShrink: 0
@@ -505,7 +501,16 @@ export default function Home() {
                 >
                     <X size={16} strokeWidth={2.5} />
                 </button>
+
+                <div style={{ backgroundColor: '#eff6ff', padding: '12px', borderRadius: '16px', color: '#3b82f6', marginBottom: '12px', display: 'inline-flex', boxShadow: '0 4px 15px rgba(59, 130, 246, 0.15)' }}>
+                    <MapPin size={24} strokeWidth={2.5} />
+                </div>
+                
+                <div style={{ width: '85%' }}>
+                    {formatText(finalDisplayName)}
+                </div>
             </div>
+            {/* 🛑 สิ้นสุดส่วนหัวที่แก้ใหม่ */}
 
             <div className="pm-container" style={{ backgroundColor: '#f8fafc', borderRadius: '20px', padding: '24px 20px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
                 <div style={{ fontSize: '13px', color: '#64748b', fontWeight: '800', marginBottom: '15px' }}>ดัชนีคุณภาพอากาศ (PM2.5)</div>
