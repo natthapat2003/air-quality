@@ -9,7 +9,7 @@ import './mobile.css';
 import { 
     Target, MapPin, X, Sparkles, Thermometer, Droplets, Gauge, CloudRain, 
     LayoutDashboard, History, Info, Activity, Clock, Wind, WifiOff, Loader,
-    Layers, CheckCircle2, ChevronDown, Menu // 🌟 เพิ่มไอคอน Menu (Hamburger)
+    Layers, CheckCircle2, ChevronDown, Menu 
 } from 'lucide-react'; 
 
 const getStatusColor = (pm25: number) => {
@@ -82,7 +82,8 @@ const WeatherCard = ({ icon, label, value, unit }: any) => (
   <div className="weather-card" style={{ 
       backgroundColor: '#ffffff', border: '1px solid #f1f5f9', borderRadius: '16px', 
       padding: '14px', display: 'flex', flexDirection: 'column', gap: '8px', 
-      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', transition: 'transform 0.2s' 
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', transition: 'transform 0.2s',
+      boxSizing: 'border-box'
   }}
   onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-2px)'}
   onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
@@ -97,9 +98,9 @@ const WeatherCard = ({ icon, label, value, unit }: any) => (
 );
 
 const LegendItem = ({ color, text }: { color: string, text: string }) => (
-    <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+    <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
       <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: color, boxShadow: `0 0 10px ${color}` }}></div>
-      <span style={{ fontSize: '14px', fontWeight: '800', color: '#475569' }}>{text}</span>
+      <span style={{ fontSize: '14px', fontWeight: '800', color: '#475569', whiteSpace: 'nowrap' }}>{text}</span>
     </div>
 );
 
@@ -131,7 +132,6 @@ export default function Home() {
   const [showStatusMenu, setShowStatusMenu] = useState(false);
   const [refreshTrigger, setRefreshTrigger] = useState(0);
 
-  // 🌟 เพิ่ม State สำหรับเปิด/ปิดเมนูบนมือถือ
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const mapRef = useRef<any>(null);
@@ -378,8 +378,7 @@ export default function Home() {
 
   return (
     <>
-      {/* 🌟 Navbar ที่ปรับปรุง Mobile Responsive */}
-      <nav className="navbar" style={{ position: 'relative', zIndex: 1006 }}>
+      <nav className="navbar" style={{ position: 'relative', zIndex: 1006, boxSizing: 'border-box' }}>
           <div className="brand">
               <div className="brand-icon">
                   <Wind size={22} strokeWidth={2.5} />
@@ -425,7 +424,8 @@ export default function Home() {
                           position: 'absolute', top: '100%', right: 0, marginTop: '12px',
                           backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)',
                           border: '1px solid rgba(255, 255, 255, 0.8)', borderRadius: '16px',
-                          padding: '16px', width: '280px', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.15)', zIndex: 1002
+                          padding: '16px', width: '280px', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.15)', zIndex: 1002,
+                          boxSizing: 'border-box'
                       }}>
                           <div style={{ fontSize: '12px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                               <Activity size={14} /> สถานะจุดตรวจวัดทั้งหมด
@@ -461,7 +461,6 @@ export default function Home() {
                   <span>{clock}</span>
               </div>
 
-              {/* 🌟 ปุ่ม Hamburger สำหรับมือถือ */}
               <button 
                   className="mobile-menu-btn"
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -470,10 +469,9 @@ export default function Home() {
               </button>
           </div>
 
-          {/* 🌟 เมนู Dropdown สำหรับมือถือ */}
           {isMobileMenuOpen && (
               <div className="mobile-dropdown" style={{
-                  position: 'absolute', top: '100%', left: 0, width: '100%',
+                  position: 'absolute', top: '100%', left: 0, width: '100%', boxSizing: 'border-box',
                   backgroundColor: 'rgba(255, 255, 255, 0.98)', backdropFilter: 'blur(10px)',
                   borderBottom: '1px solid #e2e8f0', padding: '15px 20px',
                   display: 'flex', flexDirection: 'column', gap: '10px', zIndex: 1005,
@@ -529,7 +527,8 @@ export default function Home() {
                       borderRadius: '16px', padding: '8px',
                       boxShadow: '0 10px 30px -5px rgba(0,0,0,0.15)',
                       border: '1px solid rgba(255, 255, 255, 0.6)',
-                      display: 'flex', flexDirection: 'column', gap: '4px', width: '200px'
+                      display: 'flex', flexDirection: 'column', gap: '4px', width: '200px',
+                      boxSizing: 'border-box'
                   }}>
                       <div style={{ fontSize: '11px', fontWeight: '800', color: '#94a3b8', padding: '6px 8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>รูปแบบแผนที่</div>
                       {Object.entries(MAP_STYLES).map(([key, style]) => (
@@ -556,7 +555,7 @@ export default function Home() {
       </div>
 
       {isPanelVisible && (
-        <div className="info-panel responsive-panel" style={{ 
+        <div className="info-panel" style={{ 
             width: '380px', 
             transition: 'all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1)', 
             borderRadius: '24px', 
@@ -574,7 +573,8 @@ export default function Home() {
             overflowY: 'auto',
             display: 'flex',
             flexDirection: 'column',
-            gap: '20px'
+            gap: '20px',
+            boxSizing: 'border-box'
         }}>
             
             <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', marginBottom: '-5px' }}>
@@ -601,7 +601,7 @@ export default function Home() {
                 </div>
             </div>
 
-            <div className="pm-container" style={{ backgroundColor: '#f8fafc', borderRadius: '20px', padding: '24px 20px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <div className="pm-container" style={{ backgroundColor: '#f8fafc', borderRadius: '20px', padding: '24px 20px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', boxSizing: 'border-box' }}>
                 <div style={{ fontSize: '13px', color: '#64748b', fontWeight: '800', marginBottom: '15px' }}>ดัชนีคุณภาพอากาศ (PM2.5)</div>
                 
                 <div className="pm-circle" style={{ 
@@ -635,7 +635,7 @@ export default function Home() {
                 <WeatherCard icon={<CloudRain size={16} color="#06b6d4" />} label="โอกาสฝน" value={rainChance} unit="%" />
             </div>
 
-            <div className="ai-box" style={{ background: aiTheme.bg, borderRadius: '20px', padding: '20px', border: `1px solid ${aiTheme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)', transition: 'all 0.5s ease' }}>
+            <div className="ai-box" style={{ background: aiTheme.bg, borderRadius: '20px', padding: '20px', border: `1px solid ${aiTheme.border}`, boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)', transition: 'all 0.5s ease', boxSizing: 'border-box' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '15px' }}>
                     <div style={{ background: aiTheme.iconBg, padding: '6px', borderRadius: '10px', color: 'white', boxShadow: `0 2px 10px ${aiTheme.iconShadow}`, transition: 'all 0.5s ease' }}>
                         <Sparkles size={16} strokeWidth={2.5} />
@@ -671,7 +671,8 @@ export default function Home() {
           backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
           border: '1px solid rgba(255, 255, 255, 0.8)', borderRadius: '20px',
           padding: '20px', display: 'flex', flexDirection: 'column', gap: '14px',
-          boxShadow: '0 10px 40px -10px rgba(0,0,0,0.15)'
+          boxShadow: '0 10px 40px -10px rgba(0,0,0,0.15)',
+          boxSizing: 'border-box'
       }}>
           <LegendItem color="#0ea5e9" text="ดีมาก (0-25)" />
           <LegendItem color="#10b981" text="ดี (26-50)" />
@@ -680,9 +681,14 @@ export default function Home() {
           <LegendItem color="#ef4444" text="มีผลกระทบ (201+)" />
       </div>
 
-      {/* 🌟 พระเอกของเรา! สคริปต์ CSS บังคับให้หน้าเว็บจัดระเบียบเองเมื่อดูในมือถือ */}
       <style dangerouslySetInnerHTML={{__html: `
-        /* กฎพิเศษสำหรับหน้าจอมือถือ (ความกว้างไม่เกิน 768px) */
+        /* ล็อคไม่ให้เว็บเลื่อนซ้ายขวาได้เด็ดขาด */
+        html, body {
+            overflow-x: hidden !important;
+            max-width: 100vw !important;
+        }
+
+        /* สำหรับหน้าจอมือถือ (ความกว้างไม่เกิน 768px) */
         @media (max-width: 768px) {
             .desktop-only { display: none !important; }
             .mobile-menu-btn { 
@@ -706,45 +712,57 @@ export default function Home() {
             .brand-icon svg { width: 18px !important; height: 18px !important; }
             
             .status-pill { padding: 6px 12px !important; font-size: 12px !important; }
-            .status-dropdown { right: -50px !important; width: 260px !important; }
+            
+            /* แก้ไขจุดล้น: Dropdown สถานะออนไลน์ */
+            .status-dropdown { 
+                position: fixed !important;
+                top: 65px !important; 
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+                width: 92% !important; 
+                max-width: 350px !important;
+                right: auto !important;
+            }
 
-            /* ปรับปุ่มเครื่องมือแผนที่ให้หลบลงมาไม่ชนขอบบน */
             .map-toolbar { top: 80px !important; left: 10px !important; }
             .map-layer-menu { left: 55px !important; width: 180px !important; }
 
-            /* ปรับหน้าต่างข้อมูลให้พอดีจอ ไม่ล้นขอบ */
+            /* 🌟 แก้ไขจุดล้นหลัก: กล่องข้อมูลสภาพอากาศ (Info Panel) */
             .info-panel {
-                width: calc(100% - 20px) !important;
-                max-width: 400px !important;
-                right: 10px !important;
-                left: 10px !important;
+                position: fixed !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+                right: auto !important;
+                width: 92vw !important;
+                max-width: 380px !important;
                 top: 80px !important;
-                margin: 0 auto !important;
                 padding: 16px !important;
-                max-height: calc(100vh - 180px) !important;
+                max-height: calc(100vh - 160px) !important;
+                z-index: 1005 !important;
             }
             .responsive-title { font-size: 15px !important; }
             .pm-container { padding: 16px !important; }
             .pm-circle { width: 110px !important; height: 110px !important; border-width: 10px !important; }
             .pm-value { font-size: 40px !important; }
             
-            /* ปรับแถบ Legend ให้แบนราบแนวนอนอยู่ด้านล่างสุด */
+            /* 🌟 แก้ไขจุดล้น: แถบคำอธิบายสี (Legend) */
             .map-legend {
-                bottom: 15px !important;
-                left: 10px !important;
-                right: 10px !important;
-                padding: 10px 12px !important;
+                bottom: 20px !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
+                right: auto !important;
+                width: 94vw !important;
+                max-width: 400px !important;
+                padding: 12px !important;
                 flex-direction: row !important;
                 flex-wrap: wrap !important;
                 justify-content: center !important;
-                gap: 10px !important;
+                gap: 8px 12px !important;
             }
-            .legend-item span { font-size: 11.5px !important; }
-            
+            .legend-item span { font-size: 11px !important; }
             .unit-text { font-size: 12px !important; }
         }
 
-        /* ซ่อนปุ่ม Hamburger และ Dropdown เมื่อดูบนจอคอมพิวเตอร์ */
         @media (min-width: 769px) {
             .mobile-menu-btn { display: none !important; }
             .mobile-dropdown { display: none !important; }
