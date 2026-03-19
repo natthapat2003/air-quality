@@ -687,6 +687,11 @@ export default function Home() {
             max-width: 100vw !important;
         }
 
+        /* ❌ ไม้ตาย: ซ่อนปุ่มซูมของ Leaflet แบบถาวร 100% ไม่ว่าจะหน้าจอไหนก็ตาม */
+        .leaflet-control-zoom {
+            display: none !important;
+        }
+
         /* สำหรับหน้าจอมือถือ (ความกว้างไม่เกิน 768px) */
         @media (max-width: 768px) {
             .desktop-only { display: none !important; }
@@ -708,7 +713,14 @@ export default function Home() {
             .navbar { padding: 10px 12px !important; height: 65px !important; }
             .nav-right { gap: 6px !important; }
             .brand { gap: 8px !important; }
-            .brand-text { font-size: 15px !important; white-space: nowrap !important; }
+            
+            /* 🌟 บังคับแสดงชื่อเว็บ AQI Monitor KSU บนมือถือ */
+            .brand-text { 
+                font-size: 16px !important; 
+                white-space: nowrap !important; 
+                display: inline-block !important; /* งัดกับ mobile.css เดิม */
+            }
+
             .brand-icon { padding: 5px !important; border-radius: 8px !important; }
             .brand-icon svg { width: 16px !important; height: 16px !important; }
             
@@ -729,7 +741,7 @@ export default function Home() {
             .map-toolbar { top: 85px !important; left: 10px !important; }
             .map-layer-menu { left: 55px !important; width: 180px !important; }
 
-            /* 🌟 พระเอกของเรา: Bottom Sheet เด้งจากด้านล่าง (แก้ตกขอบล่าง 100%) */
+            /* 🌟 Bottom Sheet เด้งจากด้านล่างแบบเลื่อนได้ */
             .info-panel {
                 position: fixed !important;
                 top: auto !important;
@@ -739,9 +751,10 @@ export default function Home() {
                 transform: none !important;
                 width: 100% !important;
                 max-width: 100% !important;
-                max-height: 60vh !important; /* ความสูงไม่เกิน 60% ของจอ */
+                max-height: 70vh !important; /* ปรับให้สูงขึ้นนิดนึง */
+                overflow-y: auto !important; /* 🌟 สำคัญมาก: ทำให้เลื่อนนิ้วขึ้นลงได้ */
                 border-radius: 24px 24px 0 0 !important;
-                padding: 20px 20px 30px 20px !important;
+                padding: 20px 20px 40px 20px !important; /* เพิ่มขอบล่างเผื่อตกขอบ */
                 z-index: 1005 !important;
                 box-shadow: 0 -10px 40px rgba(0,0,0,0.15) !important;
             }
@@ -768,7 +781,7 @@ export default function Home() {
                 justify-content: center !important;
                 gap: 6px 10px !important;
                 border-radius: 16px !important;
-                z-index: 999 !important; /* หลบหลัง Info panel */
+                z-index: 999 !important; 
             }
             .legend-item { padding: 2px !important; width: auto !important; }
             .legend-item span { font-size: 11px !important; }
