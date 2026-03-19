@@ -705,62 +705,74 @@ export default function Home() {
             }
             .mobile-menu-btn:active { transform: scale(0.95); background: #dbeafe; }
             
-            .navbar { padding: 12px 15px !important; }
-            .nav-right { gap: 8px !important; }
-            .brand-text { font-size: 16px !important; letter-spacing: -0.5px !important; }
-            .brand-icon { padding: 6px !important; border-radius: 8px !important; }
-            .brand-icon svg { width: 18px !important; height: 18px !important; }
+            /* Navbar ย่อส่วนและดึงให้ชื่อเว็บอยู่ครบ */
+            .navbar { padding: 10px 12px !important; height: 65px !important; }
+            .nav-right { gap: 6px !important; }
+            .brand { gap: 8px !important; }
+            .brand-text { font-size: 15px !important; white-space: nowrap !important; }
+            .brand-icon { padding: 5px !important; border-radius: 8px !important; }
+            .brand-icon svg { width: 16px !important; height: 16px !important; }
             
-            .status-pill { padding: 6px 12px !important; font-size: 12px !important; }
+            /* ปุ่มสถานะออนไลน์ย่อขนาดลง */
+            .status-pill { padding: 4px 8px !important; font-size: 11px !important; }
+            .status-text { max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: middle; }
             
-            /* แก้ไขจุดล้น: Dropdown สถานะออนไลน์ */
             .status-dropdown { 
                 position: fixed !important;
-                top: 65px !important; 
+                top: 70px !important; 
                 left: 50% !important;
                 transform: translateX(-50%) !important;
-                width: 92% !important; 
+                width: 92vw !important; 
                 max-width: 350px !important;
-                right: auto !important;
             }
 
-            .map-toolbar { top: 80px !important; left: 10px !important; }
+            /* ปุ่มบนแผนที่ขยับลงมาไม่ให้ชนเมนู */
+            .map-toolbar { top: 85px !important; left: 10px !important; }
             .map-layer-menu { left: 55px !important; width: 180px !important; }
 
-            /* 🌟 แก้ไขจุดล้นหลัก: กล่องข้อมูลสภาพอากาศ (Info Panel) */
+            /* 🌟 พระเอกของเรา: Bottom Sheet เด้งจากด้านล่าง (แก้ตกขอบล่าง 100%) */
             .info-panel {
                 position: fixed !important;
-                left: 50% !important;
-                transform: translateX(-50%) !important;
-                right: auto !important;
-                width: 92vw !important;
-                max-width: 380px !important;
-                top: 80px !important;
-                padding: 16px !important;
-                max-height: calc(100vh - 160px) !important;
+                top: auto !important;
+                bottom: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                transform: none !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                max-height: 60vh !important; /* ความสูงไม่เกิน 60% ของจอ */
+                border-radius: 24px 24px 0 0 !important;
+                padding: 20px 20px 30px 20px !important;
                 z-index: 1005 !important;
+                box-shadow: 0 -10px 40px rgba(0,0,0,0.15) !important;
             }
-            .responsive-title { font-size: 15px !important; }
-            .pm-container { padding: 16px !important; }
-            .pm-circle { width: 110px !important; height: 110px !important; border-width: 10px !important; }
-            .pm-value { font-size: 40px !important; }
             
-            /* 🌟 แก้ไขจุดล้น: แถบคำอธิบายสี (Legend) */
+            .responsive-title { font-size: 16px !important; }
+            .pm-container { padding: 12px !important; }
+            .pm-circle { width: 100px !important; height: 100px !important; border-width: 8px !important; }
+            .pm-value { font-size: 36px !important; }
+            .weather-grid { gap: 8px !important; }
+            .weather-card { padding: 10px !important; }
+            .weather-card-value { font-size: 18px !important; }
+            .ai-box { padding: 15px !important; }
+            
+            /* แผงสี Legend จัดเรียงแนวนอนแบบกะทัดรัด */
             .map-legend {
-                bottom: 20px !important;
+                bottom: 15px !important;
                 left: 50% !important;
                 transform: translateX(-50%) !important;
-                right: auto !important;
-                width: 94vw !important;
+                width: 95vw !important;
                 max-width: 400px !important;
-                padding: 12px !important;
+                padding: 10px !important;
                 flex-direction: row !important;
                 flex-wrap: wrap !important;
                 justify-content: center !important;
-                gap: 8px 12px !important;
+                gap: 6px 10px !important;
+                border-radius: 16px !important;
+                z-index: 999 !important; /* หลบหลัง Info panel */
             }
+            .legend-item { padding: 2px !important; width: auto !important; }
             .legend-item span { font-size: 11px !important; }
-            .unit-text { font-size: 12px !important; }
         }
 
         @media (min-width: 769px) {

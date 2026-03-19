@@ -279,27 +279,7 @@ td .status-badge.bg-red { background-color: #ffebee; color: #d32f2f !important; 
 .dot-red    { background-color: #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.5); }
 
 /* ========================================= */
-/* 7. รองรับการแสดงผลบนมือถือ */
-/* ========================================= */
-@media (max-width: 768px) {
-    .info-panel {
-        top: auto !important;
-        bottom: 0px !important;
-        right: 0px !important;
-        width: 100% !important;
-        max-height: 55vh;
-        overflow-y: auto;
-        border-radius: 24px 24px 0 0 !important;
-        box-shadow: 0 -5px 25px rgba(0,0,0,0.15) !important;
-        background-color: rgba(255, 255, 255, 0.85) !important;
-        backdrop-filter: blur(15px) !important;
-        -webkit-backdrop-filter: blur(15px) !important;
-    }
-    .legend-container { display: none; }
-}
-
-/* ========================================= */
-/* 8. ตกแต่ง Scrollbar สำหรับกล่อง Info Panel */
+/* 7. ตกแต่ง Scrollbar สำหรับกล่อง Info Panel */
 /* ========================================= */
 .info-panel::-webkit-scrollbar { width: 6px; }
 .info-panel::-webkit-scrollbar-track { background: transparent; }
@@ -307,7 +287,7 @@ td .status-badge.bg-red { background-color: #ffebee; color: #d32f2f !important; 
 .info-panel::-webkit-scrollbar-thumb:hover { background: rgba(0, 0, 0, 0.3); }
 
 /* ========================================= */
-/* 9. ปุ่มหาตำแหน่งดีไซน์เป๊ะ (เท่าปุ่ม Zoom) */
+/* 8. ปุ่มหาตำแหน่งดีไซน์เป๊ะ (เท่าปุ่ม Zoom) */
 /* ========================================= */
 .find-location-btn {
     position: fixed;
