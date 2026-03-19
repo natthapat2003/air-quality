@@ -9,7 +9,7 @@ import './mobile.css';
 import { 
     Target, MapPin, X, Sparkles, Thermometer, Droplets, Gauge, CloudRain, 
     LayoutDashboard, History, Info, Activity, Clock, Wind, WifiOff, Loader,
-    Layers, CheckCircle2, ChevronDown
+    Layers, CheckCircle2, ChevronDown, Menu // 🌟 เพิ่มไอคอน Menu (Hamburger)
 } from 'lucide-react'; 
 
 const getStatusColor = (pm25: number) => {
@@ -67,7 +67,7 @@ const getAiBoxTheme = (pm25: number) => {
 const formatText = (text: string) => {
   if (!text) return "";
   return (
-    <div style={{ fontSize: '18px', fontWeight: '900', color: '#0f172a', lineHeight: '1.4', textAlign: 'center' }}>
+    <div style={{ fontSize: '18px', fontWeight: '900', color: '#0f172a', lineHeight: '1.4', textAlign: 'center' }} className="responsive-title">
       {text.split('|').map((str, index, array) => (
         <span key={index}>
           {str.trim()}
@@ -91,15 +91,15 @@ const WeatherCard = ({ icon, label, value, unit }: any) => (
       {label}
     </div>
     <div className="weather-card-value" style={{ fontSize: '22px', fontWeight: '800', color: '#0f172a', display: 'flex', alignItems: 'baseline', gap: '4px' }}>
-      {value} <span>{unit}</span>
+      {value} <span className="unit-text">{unit}</span>
     </div>
   </div>
 );
 
 const LegendItem = ({ color, text }: { color: string, text: string }) => (
-    <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+    <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
       <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: color, boxShadow: `0 0 10px ${color}` }}></div>
-      <span style={{ fontSize: '14.5px', fontWeight: '800', color: '#475569' }}>{text}</span>
+      <span style={{ fontSize: '14px', fontWeight: '800', color: '#475569' }}>{text}</span>
     </div>
 );
 
@@ -128,10 +128,11 @@ export default function Home() {
   const [mapStyle, setMapStyle] = useState<keyof typeof MAP_STYLES>('street');
   const [showMapMenu, setShowMapMenu] = useState(false);
   
-  // 🛑 เพิ่ม State สำหรับเปิด/ปิดเมนูโชว์สถานะโหนด
   const [showStatusMenu, setShowStatusMenu] = useState(false);
-  // 🛑 เพิ่ม State สำหรับกระตุ้นการเช็คออนไลน์แบบ Real-time บนแผนที่
   const [refreshTrigger, setRefreshTrigger] = useState(0);
+
+  // 🌟 เพิ่ม State สำหรับเปิด/ปิดเมนูบนมือถือ
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const mapRef = useRef<any>(null);
   const markersRef = useRef<Record<string, any>>({}); 
@@ -174,7 +175,6 @@ export default function Home() {
       const now = new Date();
       setClock(`${now.toLocaleDateString('th-TH', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })} | ${now.toLocaleTimeString('th-TH')}`);
       
-      // 🛑 กระตุ้นการรีเฟรชแผนที่และสถานะทุกๆ 5 วินาที
       if (now.getSeconds() % 5 === 0) {
           setRefreshTrigger(prev => prev + 1);
       }
@@ -322,14 +322,10 @@ export default function Home() {
 
       Object.values(nodesData).forEach((node: any) => {
           const id = node.device_id || 'NODE_01';
-          
           if (hiddenNodes.includes(id)) return;
 
-          // 🛑 [ส่วนนี้ที่ทำให้หมุดหายไปเมื่อออฟไลน์]
           const nowMs = new Date().getTime();
           const isNodeOnline = node.created_at ? (nowMs - new Date(node.created_at).getTime()) <= 120000 : false;
-          
-          // ถ้าสถานะเป็นออฟไลน์ ให้ข้ามการวาดหมุดจุดนี้ไปเลย (ทำให้หมุดหาย)
           if (!isNodeOnline) return;
 
           const latlng: [number, number] = [node.lat || 16.4477, node.lng || 103.5314];
@@ -354,7 +350,7 @@ export default function Home() {
           });
           markersRef.current[id] = marker;
       });
-  }, [nodesData, selectedNodeId, nodeNames, siteName, hiddenNodes, refreshTrigger]); // 🛑 ดึง refreshTrigger เข้ามาเพื่อให้แผนที่อัปเดตทุก 5 วินาที
+  }, [nodesData, selectedNodeId, nodeNames, siteName, hiddenNodes, refreshTrigger]); 
 
   const currentData = nodesData[selectedNodeId] || { 
       pm25: 0, pm10: 0, temperature: 0, humidity: 0, pressure: 0, lat: 16.4477, displayTime: "--:--:--" 
@@ -382,7 +378,8 @@ export default function Home() {
 
   return (
     <>
-      <nav className="navbar">
+      {/* 🌟 Navbar ที่ปรับปรุง Mobile Responsive */}
+      <nav className="navbar" style={{ position: 'relative', zIndex: 1006 }}>
           <div className="brand">
               <div className="brand-icon">
                   <Wind size={22} strokeWidth={2.5} />
@@ -390,8 +387,8 @@ export default function Home() {
               <span className="brand-text">AQI Monitor <span style={{ color: '#3b82f6' }}>KSU</span></span>
           </div>
 
-          <div className="nav-right">
-              <div className="nav-links">
+          <div className="nav-right" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div className="nav-links desktop-only">
                   <Link href="/" className="nav-item active">
                       <LayoutDashboard size={16} strokeWidth={2.5} /> <span>หน้าแรก</span>
                   </Link>
@@ -403,9 +400,8 @@ export default function Home() {
                   </Link>
               </div>
               
-              <div className="nav-divider"></div> 
+              <div className="nav-divider desktop-only"></div> 
               
-              {/* 🛑 ส่วนป้ายสถานะที่ถูกครอบด้วยเมนู Dropdown */}
               <div style={{ position: 'relative' }}>
                   <div className="status-pill" onClick={() => setShowStatusMenu(!showStatusMenu)} style={{
                       display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer',
@@ -419,14 +415,13 @@ export default function Home() {
                   onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}>
                       {!hasInit ? <Loader size={14} className="spin-icon" /> : (isOnline ? <Activity size={14} strokeWidth={3} className="pulse-icon" /> : <WifiOff size={14} strokeWidth={3} />)}
                       <span className="status-text">
-                          {!hasInit ? 'กำลังเชื่อม...' : (isOnline ? `ออนไลน์ ${activeNodesCount}/${totalNodesCount > 0 ? totalNodesCount : 1} จุด` : 'ออฟไลน์')}
+                          {!hasInit ? 'กำลังเชื่อม...' : (isOnline ? `ออนไลน์ ${activeNodesCount}/${totalNodesCount > 0 ? totalNodesCount : 1}` : 'ออฟไลน์')}
                       </span>
-                      <ChevronDown size={14} style={{ marginLeft: '2px', opacity: 0.8 }} />
+                      <ChevronDown size={14} className="desktop-only" style={{ marginLeft: '2px', opacity: 0.8 }} />
                   </div>
 
-                  {/* 🛑 เมนูแสดงสถานะรายจุด */}
                   {showStatusMenu && (
-                      <div style={{
+                      <div className="status-dropdown" style={{
                           position: 'absolute', top: '100%', right: 0, marginTop: '12px',
                           backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)',
                           border: '1px solid rgba(255, 255, 255, 0.8)', borderRadius: '16px',
@@ -461,11 +456,40 @@ export default function Home() {
                   )}
               </div>
 
-              <div id="live-clock" className="live-clock">
+              <div id="live-clock" className="live-clock desktop-only">
                   <Clock size={16} strokeWidth={2.5} color="#64748b" />
                   <span>{clock}</span>
               </div>
+
+              {/* 🌟 ปุ่ม Hamburger สำหรับมือถือ */}
+              <button 
+                  className="mobile-menu-btn"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                  {isMobileMenuOpen ? <X size={22} strokeWidth={2.5} /> : <Menu size={22} strokeWidth={2.5} />}
+              </button>
           </div>
+
+          {/* 🌟 เมนู Dropdown สำหรับมือถือ */}
+          {isMobileMenuOpen && (
+              <div className="mobile-dropdown" style={{
+                  position: 'absolute', top: '100%', left: 0, width: '100%',
+                  backgroundColor: 'rgba(255, 255, 255, 0.98)', backdropFilter: 'blur(10px)',
+                  borderBottom: '1px solid #e2e8f0', padding: '15px 20px',
+                  display: 'flex', flexDirection: 'column', gap: '10px', zIndex: 1005,
+                  boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)'
+              }}>
+                  <Link href="/" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#2563eb', fontWeight: '700', padding: '12px', backgroundColor: '#eff6ff', borderRadius: '12px', textDecoration: 'none' }}>
+                      <LayoutDashboard size={18} strokeWidth={2.5} /> หน้าแรก (แผนที่)
+                  </Link>
+                  <Link href="/history" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#475569', fontWeight: '700', padding: '12px', textDecoration: 'none' }}>
+                      <History size={18} strokeWidth={2.5} /> ข้อมูลย้อนหลัง
+                  </Link>
+                  <Link href="/info" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#475569', fontWeight: '700', padding: '12px', textDecoration: 'none' }}>
+                      <Info size={18} strokeWidth={2.5} /> เกณฑ์คุณภาพอากาศ
+                  </Link>
+              </div>
+          )}
       </nav>
 
       <div className="map-toolbar" style={{
@@ -499,7 +523,7 @@ export default function Home() {
               </button>
               
               {showMapMenu && (
-                  <div style={{
+                  <div className="map-layer-menu" style={{
                       position: 'absolute', left: '60px', top: '0',
                       backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)',
                       borderRadius: '16px', padding: '8px',
@@ -655,6 +679,77 @@ export default function Home() {
           <LegendItem color="#f97316" text="เริ่มมีผล (101-200)" />
           <LegendItem color="#ef4444" text="มีผลกระทบ (201+)" />
       </div>
+
+      {/* 🌟 พระเอกของเรา! สคริปต์ CSS บังคับให้หน้าเว็บจัดระเบียบเองเมื่อดูในมือถือ */}
+      <style dangerouslySetInnerHTML={{__html: `
+        /* กฎพิเศษสำหรับหน้าจอมือถือ (ความกว้างไม่เกิน 768px) */
+        @media (max-width: 768px) {
+            .desktop-only { display: none !important; }
+            .mobile-menu-btn { 
+                display: flex !important; 
+                align-items: center; 
+                justify-content: center; 
+                background: #eff6ff; 
+                border: none; 
+                color: #2563eb; 
+                padding: 8px; 
+                border-radius: 12px; 
+                cursor: pointer; 
+                transition: 0.2s;
+            }
+            .mobile-menu-btn:active { transform: scale(0.95); background: #dbeafe; }
+            
+            .navbar { padding: 12px 15px !important; }
+            .nav-right { gap: 8px !important; }
+            .brand-text { font-size: 16px !important; letter-spacing: -0.5px !important; }
+            .brand-icon { padding: 6px !important; border-radius: 8px !important; }
+            .brand-icon svg { width: 18px !important; height: 18px !important; }
+            
+            .status-pill { padding: 6px 12px !important; font-size: 12px !important; }
+            .status-dropdown { right: -50px !important; width: 260px !important; }
+
+            /* ปรับปุ่มเครื่องมือแผนที่ให้หลบลงมาไม่ชนขอบบน */
+            .map-toolbar { top: 80px !important; left: 10px !important; }
+            .map-layer-menu { left: 55px !important; width: 180px !important; }
+
+            /* ปรับหน้าต่างข้อมูลให้พอดีจอ ไม่ล้นขอบ */
+            .info-panel {
+                width: calc(100% - 20px) !important;
+                max-width: 400px !important;
+                right: 10px !important;
+                left: 10px !important;
+                top: 80px !important;
+                margin: 0 auto !important;
+                padding: 16px !important;
+                max-height: calc(100vh - 180px) !important;
+            }
+            .responsive-title { font-size: 15px !important; }
+            .pm-container { padding: 16px !important; }
+            .pm-circle { width: 110px !important; height: 110px !important; border-width: 10px !important; }
+            .pm-value { font-size: 40px !important; }
+            
+            /* ปรับแถบ Legend ให้แบนราบแนวนอนอยู่ด้านล่างสุด */
+            .map-legend {
+                bottom: 15px !important;
+                left: 10px !important;
+                right: 10px !important;
+                padding: 10px 12px !important;
+                flex-direction: row !important;
+                flex-wrap: wrap !important;
+                justify-content: center !important;
+                gap: 10px !important;
+            }
+            .legend-item span { font-size: 11.5px !important; }
+            
+            .unit-text { font-size: 12px !important; }
+        }
+
+        /* ซ่อนปุ่ม Hamburger และ Dropdown เมื่อดูบนจอคอมพิวเตอร์ */
+        @media (min-width: 769px) {
+            .mobile-menu-btn { display: none !important; }
+            .mobile-dropdown { display: none !important; }
+        }
+      `}} />
     </>
   );
 }
