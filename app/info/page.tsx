@@ -3,16 +3,17 @@
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
 
-// 🛑 Import ไฟล์ CSS สำหรับมือถือ
+// Import ไฟล์ CSS สำหรับมือถือ
 import '../mobile.css';
 
-// 🛑 นำเข้าไอคอน (เอาไอคอน Lock และ LogOut ออกแล้ว)
+// นำเข้าไอคอน (เพิ่ม Menu และ X สำหรับมือถือ)
 import { 
-    Wind, LayoutDashboard, History, Info as InfoIcon, Clock, BookOpen 
+    Wind, LayoutDashboard, History, Info as InfoIcon, Clock, BookOpen, Menu, X
 } from 'lucide-react';
 
 export default function InfoPage() {
   const [clock, setClock] = useState("กำลังโหลดเวลา...");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // ฟังก์ชันนาฬิกา
   useEffect(() => {
@@ -25,18 +26,16 @@ export default function InfoPage() {
 
   return (
     <>
-      <nav className="navbar">
+      <nav className="navbar" style={{ position: 'relative', zIndex: 1006, boxSizing: 'border-box' }}>
         <div className="brand">
             <div className="brand-icon">
                 <Wind size={22} strokeWidth={2.5} />
             </div>
-            {/* 🛑 ใส่ Class brand-text เพื่อซ่อนในมือถือ */}
             <span className="brand-text">AQI Monitor <span style={{ color: '#3b82f6' }}>KSU</span></span>
         </div>
 
-        <div className="nav-right">
-            <div className="nav-links">
-                {/* 🛑 ใส่ <span> ครอบข้อความ เพื่อให้ CSS สั่งซ่อน/ย่อได้ */}
+        <div className="nav-right" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <div className="nav-links desktop-only">
                 <Link href="/" className="nav-item">
                     <LayoutDashboard size={16} strokeWidth={2.5} /> <span>หน้าแรก</span>
                 </Link>
@@ -48,17 +47,40 @@ export default function InfoPage() {
                 </Link>
             </div>
             
-            <div className="nav-divider"></div>
+            <div className="nav-divider desktop-only"></div>
 
-            <div id="live-clock" className="live-clock">
+            <div id="live-clock" className="live-clock desktop-only">
                 <Clock size={16} strokeWidth={2.5} color="#64748b" />
                 <span>{clock}</span>
             </div>
+
+            {/* ปุ่ม Hamburger สำหรับมือถือ */}
+            <button 
+                className="mobile-menu-btn"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            >
+                {isMobileMenuOpen ? <X size={22} strokeWidth={2.5} /> : <Menu size={22} strokeWidth={2.5} />}
+            </button>
         </div>
+
+        {/* เมนูที่กางลงมาบนมือถือ */}
+        {isMobileMenuOpen && (
+            <div className="mobile-dropdown">
+                <Link href="/" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#475569', fontWeight: '700', padding: '12px', textDecoration: 'none' }}>
+                    <LayoutDashboard size={18} strokeWidth={2.5} /> หน้าแรก
+                </Link>
+                <Link href="/history" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#475569', fontWeight: '700', padding: '12px', textDecoration: 'none' }}>
+                    <History size={18} strokeWidth={2.5} /> ข้อมูลย้อนหลัง
+                </Link>
+                <Link href="/info" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#2563eb', fontWeight: '700', padding: '12px', backgroundColor: '#eff6ff', borderRadius: '12px', textDecoration: 'none' }}>
+                    <InfoIcon size={18} strokeWidth={2.5} /> เกณฑ์คุณภาพอากาศ
+                </Link>
+            </div>
+        )}
       </nav>
 
       <div className="container" style={{ padding: '40px 20px', maxWidth: '1200px', margin: '0 auto' }}>
-        <div className="card" style={{ borderRadius: '24px', border: '1px solid #f1f5f9', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.08)', padding: '35px', backgroundColor: '#ffffff' }}>
+        <div className="card" style={{ borderRadius: '24px', border: '1px solid #f1f5f9', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.08)', padding: '35px', backgroundColor: '#ffffff', boxSizing: 'border-box' }}>
             
             <div className="header-row" style={{ width: '100%', marginBottom: '30px', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '12px', textAlign: 'left' }}>
                 <div style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', padding: '10px', borderRadius: '12px', color: 'white', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)' }}>
@@ -67,8 +89,7 @@ export default function InfoPage() {
                 <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0, letterSpacing: '-0.5px' }}>เกณฑ์ดัชนีคุณภาพอากาศของประเทศไทย</h2>
             </div>
             
-            {/* 🛑 เปลี่ยน overflow: 'hidden' เป็น overflowX: 'auto' เพื่อให้ตารางเลื่อนซ้ายขวาได้ในมือถือ */}
-            <div className="table-responsive" style={{ border: '1px solid #e2e8f0', borderRadius: '16px', overflowX: 'auto' }}>
+            <div className="table-responsive" style={{ border: '1px solid #e2e8f0', borderRadius: '16px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                 <table style={{ minWidth: '800px', width: '100%', borderCollapse: 'collapse', backgroundColor: '#ffffff' }}>
                     <thead>
                         <tr style={{ backgroundColor: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
@@ -195,6 +216,48 @@ export default function InfoPage() {
             </div>
         </div>
       </div>
+
+      {/* ---------------- Global Styles & Mobile CSS ---------------- */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+        /* สำหรับหน้าจอมือถือ (ความกว้างไม่เกิน 768px) */
+        @media (max-width: 768px) {
+            .desktop-only { display: none !important; }
+            .mobile-menu-btn { 
+                display: flex !important; align-items: center; justify-content: center; 
+                background: #eff6ff; border: none; color: #2563eb; padding: 8px; 
+                border-radius: 12px; cursor: pointer; transition: 0.2s;
+            }
+            .mobile-menu-btn:active { transform: scale(0.95); background: #dbeafe; }
+            
+            .navbar { padding: 10px 12px !important; height: 65px !important; }
+            .nav-right { gap: 6px !important; }
+            .brand { gap: 8px !important; }
+            .brand-text { font-size: 16px !important; white-space: nowrap !important; display: inline-block !important; }
+            .brand-icon { padding: 5px !important; border-radius: 8px !important; }
+            .brand-icon svg { width: 16px !important; height: 16px !important; }
+            
+            .mobile-dropdown {
+                position: absolute; top: 100%; left: 0; width: 100%; box-sizing: border-box;
+                background-color: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px);
+                border-bottom: 1px solid #e2e8f0; padding: 15px 20px;
+                display: flex; flex-direction: column; gap: 10px; z-index: 1005;
+                box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+            }
+
+            .container { padding: 15px !important; }
+            .card { padding: 20px 15px !important; }
+            .header-row h2 { font-size: 18px !important; } /* ลดขนาดหัวข้อลงนิดหน่อยในมือถือ */
+
+            /* ปรับตารางให้กะทัดรัดขึ้นบนมือถือเพื่อให้อ่านง่ายตอนเลื่อน */
+            th, td { padding: 15px 12px !important; }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-menu-btn { display: none !important; }
+            .mobile-dropdown { display: none !important; }
+        }
+      `}} />
     </>
   );
 }
