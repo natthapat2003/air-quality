@@ -477,7 +477,7 @@ export default function Home() {
                   boxShadow: '0 10px 25px -5px rgba(0,0,0,0.1)'
               }}>
                   <Link href="/" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#2563eb', fontWeight: '700', padding: '12px', backgroundColor: '#eff6ff', borderRadius: '12px', textDecoration: 'none' }}>
-                      <LayoutDashboard size={18} strokeWidth={2.5} /> หน้าแรก (แผนที่)
+                      <LayoutDashboard size={18} strokeWidth={2.5} /> หน้าแรก
                   </Link>
                   <Link href="/history" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#475569', fontWeight: '700', padding: '12px', textDecoration: 'none' }}>
                       <History size={18} strokeWidth={2.5} /> ข้อมูลย้อนหลัง
