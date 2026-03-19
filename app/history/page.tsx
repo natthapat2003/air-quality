@@ -8,7 +8,7 @@ import {
   Wind, LayoutDashboard, History, Info, Clock, Lock, LogOut,
   Download, Settings, Trash2, Search, Activity, TrendingUp,
   TrendingDown, Database, MapPin, X, Server, ArrowUpDown, ArrowUp, ArrowDown,
-  Eye, EyeOff, Save, FileSpreadsheet, Calendar, ChevronLeft, ChevronRight, Minus
+  Eye, EyeOff, Save, FileSpreadsheet, Calendar, ChevronLeft, ChevronRight, Minus, Menu
 } from 'lucide-react';
 
 import {
@@ -35,7 +35,7 @@ ChartJS.register(
 // Components
 // ==========================================
 const ProStatCard = ({ icon, title, value, color }: any) => (
-  <div
+  <div className="stat-card"
     style={{
       backgroundColor: '#ffffff',
       border: '1px solid #f1f5f9',
@@ -51,11 +51,11 @@ const ProStatCard = ({ icon, title, value, color }: any) => (
     onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-4px)'}
     onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}
   >
-    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '14px', fontWeight: '700' }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#64748b', fontSize: '13px', fontWeight: '700' }}>
       {icon}
       {title}
     </div>
-    <div style={{ fontSize: '32px', fontWeight: '900', color: color }}>
+    <div style={{ fontSize: '28px', fontWeight: '900', color: color, lineHeight: '1' }}>
       {value}
     </div>
   </div>
@@ -89,6 +89,9 @@ export default function HistoryPage() {
   const [nodeNames, setNodeNames] = useState<Record<string, string>>({});
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [hiddenNodes, setHiddenNodes] = useState<string[]>([]);
+  
+  // Mobile Menu
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // ---------------- Effects ----------------
   // Auth Check
@@ -469,62 +472,97 @@ export default function HistoryPage() {
   // ==========================================
   return (
     <>
-      {/* ---------------- Navbar ---------------- */}
-      <nav className="navbar">
-        <div className="brand">
-          <div className="brand-icon">
-            <Wind size={22} strokeWidth={2.5} />
-          </div>
-          <span>AQI Monitor <span style={{ color: '#3b82f6' }}>KSU</span></span>
-        </div>
-
-        <div className="nav-right">
-          <div className="nav-links">
-            <Link href="/" className="nav-item">
-              <LayoutDashboard size={16} strokeWidth={2.5} /> หน้าแรก
-            </Link>
-            <Link href="/history" className="nav-item active">
-              <History size={16} strokeWidth={2.5} /> ข้อมูลย้อนหลัง
-            </Link>
-            <Link href="/info" className="nav-item">
-              <Info size={16} strokeWidth={2.5} /> เกณฑ์คุณภาพอากาศ
-            </Link>
+      {/* ---------------- Navbar (อัปเกรดให้เหมือนหน้าแรก) ---------------- */}
+      <nav className="navbar" style={{ position: 'relative', zIndex: 1006, boxSizing: 'border-box' }}>
+          <div className="brand">
+              <div className="brand-icon">
+                  <Wind size={22} strokeWidth={2.5} />
+              </div>
+              <span className="brand-text">AQI Monitor <span style={{ color: '#3b82f6' }}>KSU</span></span>
           </div>
 
-          <div className="nav-divider"></div>
+          <div className="nav-right" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div className="nav-links desktop-only">
+                  <Link href="/" className="nav-item">
+                      <LayoutDashboard size={16} strokeWidth={2.5} /> <span>หน้าแรก</span>
+                  </Link>
+                  <Link href="/history" className="nav-item active">
+                      <History size={16} strokeWidth={2.5} /> <span>ข้อมูลย้อนหลัง</span>
+                  </Link>
+                  <Link href="/info" className="nav-item">
+                      <Info size={16} strokeWidth={2.5} /> <span>เกณฑ์คุณภาพอากาศ</span>
+                  </Link>
+              </div>
+              
+              <div className="nav-divider desktop-only"></div> 
 
-          {!isAdmin ? (
-            <Link href="/login" style={{
-              display: 'flex', alignItems: 'center', gap: '6px',
-              padding: '8px 16px', backgroundColor: '#f1f5f9', color: '#475569',
-              borderRadius: '20px', fontWeight: '700', fontSize: '13.5px', textDecoration: 'none', transition: 'all 0.2s'
-            }}
-              onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#e2e8f0'; e.currentTarget.style.color = '#0f172a'; }}
-              onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.color = '#475569'; }}>
-              <Lock size={16} strokeWidth={2.5} /> Admin Login
-            </Link>
-          ) : (
-            <button onClick={handleLogout} style={{
-              display: 'flex', alignItems: 'center', gap: '6px',
-              padding: '8px 16px', backgroundColor: '#fee2e2', color: '#ef4444', border: 'none', cursor: 'pointer',
-              borderRadius: '20px', fontWeight: '700', fontSize: '13.5px', transition: 'all 0.2s'
-            }}
-              onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#fecaca'; e.currentTarget.style.color = '#dc2626'; }}
-              onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#fee2e2'; e.currentTarget.style.color = '#ef4444'; }}>
-              <LogOut size={16} strokeWidth={2.5} /> ออกจากระบบ
-            </button>
+              {!isAdmin ? (
+                <Link href="/login" className="desktop-only" style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '8px 16px', backgroundColor: '#f1f5f9', color: '#475569',
+                  borderRadius: '20px', fontWeight: '700', fontSize: '13.5px', textDecoration: 'none', transition: 'all 0.2s'
+                }}
+                  onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#e2e8f0'; e.currentTarget.style.color = '#0f172a'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.color = '#475569'; }}>
+                  <Lock size={16} strokeWidth={2.5} /> Admin Login
+                </Link>
+              ) : (
+                <button onClick={handleLogout} className="desktop-only" style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '8px 16px', backgroundColor: '#fee2e2', color: '#ef4444', border: 'none', cursor: 'pointer',
+                  borderRadius: '20px', fontWeight: '700', fontSize: '13.5px', transition: 'all 0.2s'
+                }}
+                  onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#fecaca'; e.currentTarget.style.color = '#dc2626'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#fee2e2'; e.currentTarget.style.color = '#ef4444'; }}>
+                  <LogOut size={16} strokeWidth={2.5} /> ออกจากระบบ
+                </button>
+              )}
+
+              <div id="live-clock" className="live-clock desktop-only">
+                  <Clock size={16} strokeWidth={2.5} color="#64748b" />
+                  <span>{clock}</span>
+              </div>
+
+              {/* ปุ่ม Hamburger สำหรับมือถือ */}
+              <button 
+                  className="mobile-menu-btn"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                  {isMobileMenuOpen ? <X size={22} strokeWidth={2.5} /> : <Menu size={22} strokeWidth={2.5} />}
+              </button>
+          </div>
+
+          {/* เมนูที่กางลงมาบนมือถือ */}
+          {isMobileMenuOpen && (
+              <div className="mobile-dropdown">
+                  <Link href="/" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#475569', fontWeight: '700', padding: '12px', textDecoration: 'none' }}>
+                      <LayoutDashboard size={18} strokeWidth={2.5} /> หน้าแรก
+                  </Link>
+                  <Link href="/history" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#2563eb', fontWeight: '700', padding: '12px', backgroundColor: '#eff6ff', borderRadius: '12px', textDecoration: 'none' }}>
+                      <History size={18} strokeWidth={2.5} /> ข้อมูลย้อนหลัง
+                  </Link>
+                  <Link href="/info" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#475569', fontWeight: '700', padding: '12px', textDecoration: 'none' }}>
+                      <Info size={18} strokeWidth={2.5} /> เกณฑ์คุณภาพอากาศ
+                  </Link>
+                  
+                  {/* ปุ่ม Admin สำหรับมือถือ */}
+                  <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '5px 0' }}></div>
+                  {!isAdmin ? (
+                    <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#475569', fontWeight: '700', padding: '12px', textDecoration: 'none' }}>
+                        <Lock size={18} strokeWidth={2.5} /> Admin Login
+                    </Link>
+                  ) : (
+                    <button onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#ef4444', fontWeight: '700', padding: '12px', textDecoration: 'none', background: 'none', border: 'none', width: '100%', textAlign: 'left', fontFamily: 'inherit', fontSize: '15px' }}>
+                        <LogOut size={18} strokeWidth={2.5} /> ออกจากระบบ
+                    </button>
+                  )}
+              </div>
           )}
-
-          <div id="live-clock" className="live-clock">
-            <Clock size={16} strokeWidth={2.5} color="#64748b" />
-            <span>{clock}</span>
-          </div>
-        </div>
       </nav>
 
       {/* ---------------- Main Content ---------------- */}
       <div className="container">
-        <div className="card" style={{ borderRadius: '24px', border: '1px solid #f1f5f9', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.08)', padding: '35px' }}>
+        <div className="card" style={{ borderRadius: '24px', border: '1px solid #f1f5f9', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.08)', padding: '35px', boxSizing: 'border-box' }}>
 
           <div className="header-row" style={{ marginBottom: '30px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '15px' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -534,12 +572,12 @@ export default function HistoryPage() {
               <h2 style={{ fontSize: '22px', fontWeight: '900', color: '#0f172a', margin: 0, letterSpacing: '-0.5px' }}>ประวัติการตรวจวัด</h2>
             </div>
 
-            <div style={{
+            <div className="filter-group" style={{
               display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap',
               background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '20px',
               padding: '6px 16px', boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.02)'
             }}>
-              <Search size={16} color="#64748b" />
+              <Search size={16} color="#64748b" className="desktop-only" />
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <MapPin size={16} color="#3b82f6" />
@@ -557,45 +595,44 @@ export default function HistoryPage() {
                 </select>
               </div>
 
-              <div style={{ width: '1px', height: '24px', backgroundColor: '#cbd5e1', margin: '0 4px' }}></div>
+              <div className="desktop-only" style={{ width: '1px', height: '24px', backgroundColor: '#cbd5e1', margin: '0 4px' }}></div>
 
-              <select value={filterType} onChange={(e) => setFilterType(e.target.value)}
-                style={{ border: 'none', background: 'transparent', fontWeight: '700', color: '#334155', outline: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }}>
-                <option value="day">รายวัน</option>
-                <option value="month">รายเดือน</option>
-                <option value="custom">กำหนดช่วงเวลา</option>
-                <option value="all">ทั้งหมด</option>
-              </select>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <select value={filterType} onChange={(e) => setFilterType(e.target.value)}
+                  style={{ border: 'none', background: 'transparent', fontWeight: '700', color: '#334155', outline: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }}>
+                  <option value="day">รายวัน</option>
+                  <option value="month">รายเดือน</option>
+                  <option value="custom">ช่วงเวลา</option>
+                  <option value="all">ทั้งหมด</option>
+                </select>
 
-              <div style={{ width: '1px', height: '24px', backgroundColor: '#cbd5e1', margin: '0 4px' }}></div>
+                <div className="desktop-only" style={{ width: '1px', height: '24px', backgroundColor: '#cbd5e1', margin: '0 4px' }}></div>
 
-              {filterType === 'day' && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Calendar size={16} color="#3b82f6" />
-                  <input type="date" value={dateInput} onChange={e => setDateInput(e.target.value)}
-                    style={{ border: 'none', background: 'transparent', outline: 'none', fontWeight: '700', color: '#0f172a', cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }} />
-                </div>
-              )}
-              {filterType === 'month' && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Calendar size={16} color="#3b82f6" />
-                  <input type="month" value={monthInput} onChange={e => setMonthInput(e.target.value)}
-                    style={{ border: 'none', background: 'transparent', outline: 'none', fontWeight: '700', color: '#0f172a', cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }} />
-                </div>
-              )}
-              {filterType === 'custom' && (
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Calendar size={16} color="#3b82f6" />
-                  <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={{ border: 'none', background: 'transparent', outline: 'none', fontWeight: '700', color: '#0f172a', cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }} />
-                  <span style={{ color: '#94a3b8', fontWeight: '700' }}>ถึง</span>
-                  <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={{ border: 'none', background: 'transparent', outline: 'none', fontWeight: '700', color: '#0f172a', cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }} />
-                </div>
-              )}
-              {filterType === 'all' && (
-                <div style={{ fontSize: '14px', fontWeight: '700', color: '#64748b' }}>แสดงข้อมูลทั้งหมด</div>
-              )}
+                {filterType === 'day' && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Calendar size={16} color="#3b82f6" />
+                    <input type="date" value={dateInput} onChange={e => setDateInput(e.target.value)}
+                      style={{ border: 'none', background: 'transparent', outline: 'none', fontWeight: '700', color: '#0f172a', cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }} />
+                  </div>
+                )}
+                {filterType === 'month' && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Calendar size={16} color="#3b82f6" />
+                    <input type="month" value={monthInput} onChange={e => setMonthInput(e.target.value)}
+                      style={{ border: 'none', background: 'transparent', outline: 'none', fontWeight: '700', color: '#0f172a', cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }} />
+                  </div>
+                )}
+                {filterType === 'custom' && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Calendar size={16} color="#3b82f6" />
+                    <input type="date" value={startDate} onChange={e => setStartDate(e.target.value)} style={{ border: 'none', background: 'transparent', outline: 'none', fontWeight: '700', color: '#0f172a', cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px', width: '110px' }} />
+                    <span style={{ color: '#94a3b8', fontWeight: '700' }}>ถึง</span>
+                    <input type="date" value={endDate} onChange={e => setEndDate(e.target.value)} style={{ border: 'none', background: 'transparent', outline: 'none', fontWeight: '700', color: '#0f172a', cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px', width: '110px' }} />
+                  </div>
+                )}
+              </div>
 
-              <div style={{ backgroundColor: '#eff6ff', color: '#2563eb', padding: '4px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '800', marginLeft: '4px' }}>
+              <div style={{ backgroundColor: '#eff6ff', color: '#2563eb', padding: '4px 12px', borderRadius: '12px', fontSize: '12px', fontWeight: '800', marginLeft: 'auto' }}>
                 พบ {isLoadingData ? '...' : filteredData.length} รายการ
               </div>
             </div>
@@ -617,7 +654,7 @@ export default function HistoryPage() {
             </div>
           </div>
 
-          <div className="stats-grid">
+          <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
             <ProStatCard
               icon={<Activity size={18} color="#64748b" />}
               title="ค่าเฉลี่ย PM2.5"
@@ -626,35 +663,33 @@ export default function HistoryPage() {
             />
             <ProStatCard icon={<TrendingUp size={18} color="#ef4444" />} title="ค่าสูงสุด (Max)" value={stats.max === -Infinity ? '--' : stats.max} color="#ef4444" />
             <ProStatCard icon={<TrendingDown size={18} color="#10b981" />} title="ค่าต่ำสุด (Min)" value={stats.min === Infinity ? '--' : stats.min} color="#10b981" />
-            <ProStatCard icon={<Database size={18} color="#3b82f6" />} title="จำนวนข้อมูล" value={isLoadingData ? 'กำลังโหลด...' : stats.count} color="#3b82f6" />
+            <ProStatCard icon={<Database size={18} color="#3b82f6" />} title="จำนวนข้อมูล" value={isLoadingData ? '...' : stats.count} color="#3b82f6" />
           </div>
 
           {/* ---------------- Chart ---------------- */}
-          <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #f1f5f9', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginBottom: '20px' }}>
+          <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #f1f5f9', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', boxSizing: 'border-box' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
               <Activity size={18} color="#64748b" />
-              <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#475569', margin: 0, letterSpacing: '0.2px' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#475569', margin: 0, letterSpacing: '0.2px' }}>
                 กราฟแท่งแสดงแนวโน้มฝุ่น PM2.5
-                <span style={{ fontWeight: '400', color: '#94a3b8', marginLeft: '6px' }}>({filteredData.length} รายการ)</span>
+                <span style={{ fontWeight: '600', color: '#94a3b8', marginLeft: '6px' }}>({filteredData.length} รายการ)</span>
               </h3>
             </div>
-            <div style={{ overflowX: 'auto', paddingBottom: '15px' }}>
-              <div style={{ height: '400px', minWidth: `${Math.max(800, filteredData.length * 15)}px` }}>
+            <div style={{ overflowX: 'auto', paddingBottom: '15px', WebkitOverflowScrolling: 'touch' }}>
+              <div style={{ height: '350px', minWidth: `${Math.max(600, filteredData.length * 15)}px` }}>
                 <Bar data={chartData} options={chartOptions as any} />
               </div>
             </div>
           </div>
 
           {/* ---------------- Table ---------------- */}
-          <div className="table-responsive" style={{ marginTop: '20px', border: '1px solid #e2e8f0', borderRadius: '16px', overflow: 'hidden' }}>
-            <table style={{ minWidth: '1000px', width: '100%', textAlign: 'left', borderCollapse: 'collapse', backgroundColor: '#ffffff' }}>
+          <div className="table-responsive" style={{ marginTop: '20px', border: '1px solid #e2e8f0', borderRadius: '16px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
+            <table style={{ minWidth: '900px', width: '100%', textAlign: 'left', borderCollapse: 'collapse', backgroundColor: '#ffffff' }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
                   <th
                     onClick={() => handleSort('displayNo')}
-                    style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'displayNo' ? '#2563eb' : '#475569', fontWeight: '800', width: '80px', textAlign: 'center', backgroundColor: sortConfig?.key === 'displayNo' ? '#eff6ff' : '#f8fafc', transition: '0.2s' }}
-                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
-                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = sortConfig?.key === 'displayNo' ? '#eff6ff' : '#f8fafc'}
+                    style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'displayNo' ? '#2563eb' : '#475569', fontWeight: '800', width: '70px', textAlign: 'center', backgroundColor: sortConfig?.key === 'displayNo' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}
                   >
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
                       No. {renderSortIcon('displayNo')}
@@ -663,9 +698,7 @@ export default function HistoryPage() {
 
                   <th
                     onClick={() => handleSort('rawDate')}
-                    style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'rawDate' ? '#2563eb' : '#475569', fontWeight: '800', backgroundColor: sortConfig?.key === 'rawDate' ? '#eff6ff' : '#f8fafc', transition: '0.2s' }}
-                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
-                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = sortConfig?.key === 'rawDate' ? '#eff6ff' : '#f8fafc'}
+                    style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'rawDate' ? '#2563eb' : '#475569', fontWeight: '800', backgroundColor: sortConfig?.key === 'rawDate' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}
                   >
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                       เวลาที่บันทึก {renderSortIcon('rawDate')}
@@ -674,9 +707,7 @@ export default function HistoryPage() {
 
                   <th
                     onClick={() => handleSort('pm25')}
-                    style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'pm25' ? '#2563eb' : '#475569', fontWeight: '800', backgroundColor: sortConfig?.key === 'pm25' ? '#eff6ff' : '#f8fafc', transition: '0.2s' }}
-                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
-                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = sortConfig?.key === 'pm25' ? '#eff6ff' : '#f8fafc'}
+                    style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'pm25' ? '#2563eb' : '#475569', fontWeight: '800', backgroundColor: sortConfig?.key === 'pm25' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}
                   >
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                       PM2.5 & คุณภาพ <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>(µg/m³)</span> {renderSortIcon('pm25')}
@@ -685,9 +716,7 @@ export default function HistoryPage() {
 
                   <th
                     onClick={() => handleSort('temperature')}
-                    style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'temperature' ? '#2563eb' : '#475569', fontWeight: '800', textAlign: 'center', backgroundColor: sortConfig?.key === 'temperature' ? '#eff6ff' : '#f8fafc', transition: '0.2s' }}
-                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
-                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = sortConfig?.key === 'temperature' ? '#eff6ff' : '#f8fafc'}
+                    style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'temperature' ? '#2563eb' : '#475569', fontWeight: '800', textAlign: 'center', backgroundColor: sortConfig?.key === 'temperature' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
                       อุณหภูมิ <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>(°C)</span> {renderSortIcon('temperature')}
@@ -696,9 +725,7 @@ export default function HistoryPage() {
 
                   <th
                     onClick={() => handleSort('humidity')}
-                    style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'humidity' ? '#2563eb' : '#475569', fontWeight: '800', textAlign: 'center', backgroundColor: sortConfig?.key === 'humidity' ? '#eff6ff' : '#f8fafc', transition: '0.2s' }}
-                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
-                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = sortConfig?.key === 'humidity' ? '#eff6ff' : '#f8fafc'}
+                    style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'humidity' ? '#2563eb' : '#475569', fontWeight: '800', textAlign: 'center', backgroundColor: sortConfig?.key === 'humidity' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
                       ความชื้น <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>(%)</span> {renderSortIcon('humidity')}
@@ -707,17 +734,15 @@ export default function HistoryPage() {
 
                   <th
                     onClick={() => handleSort('pressure')}
-                    style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'pressure' ? '#2563eb' : '#475569', fontWeight: '800', textAlign: 'center', backgroundColor: sortConfig?.key === 'pressure' ? '#eff6ff' : '#f8fafc', transition: '0.2s' }}
-                    onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f1f5f9'}
-                    onMouseOut={(e) => e.currentTarget.style.backgroundColor = sortConfig?.key === 'pressure' ? '#eff6ff' : '#f8fafc'}
+                    style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'pressure' ? '#2563eb' : '#475569', fontWeight: '800', textAlign: 'center', backgroundColor: sortConfig?.key === 'pressure' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
                       ความกดอากาศ <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>(hPa)</span> {renderSortIcon('pressure')}
                     </div>
                   </th>
 
-                  <th style={{ padding: '16px', color: '#475569', fontWeight: '800', backgroundColor: '#f8fafc' }}>ตำแหน่งจุดวัด</th>
-                  {isAdmin && <th style={{ padding: '16px', color: '#475569', fontWeight: '800', textAlign: 'center', backgroundColor: '#f8fafc' }}>จัดการ</th>}
+                  <th style={{ padding: '16px', color: '#475569', fontWeight: '800', backgroundColor: '#f8fafc', whiteSpace: 'nowrap' }}>ตำแหน่งจุดวัด</th>
+                  {isAdmin && <th style={{ padding: '16px', color: '#475569', fontWeight: '800', textAlign: 'center', backgroundColor: '#f8fafc', whiteSpace: 'nowrap' }}>จัดการ</th>}
                 </tr>
               </thead>
               <tbody>
@@ -748,7 +773,7 @@ export default function HistoryPage() {
                       <tr key={data.key} style={{ transition: 'background-color 0.2s', borderBottom: '1px solid #f1f5f9' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
                         <td style={{ padding: '16px', color: '#94a3b8', fontWeight: '700', textAlign: 'center' }}>{data.displayNo}</td>
 
-                        <td style={{ padding: '16px', fontWeight: '700', color: '#64748b' }}>{data.timestamp}</td>
+                        <td style={{ padding: '16px', fontWeight: '700', color: '#64748b', whiteSpace: 'nowrap' }}>{data.timestamp}</td>
 
                         <td style={{ padding: '16px' }}>
                           <div style={{
@@ -761,7 +786,7 @@ export default function HistoryPage() {
                               {trendIcon}
                             </div>
                             <div style={{ width: '1px', height: '14px', backgroundColor: status.border }}></div>
-                            <span style={{ fontSize: '13.5px', fontWeight: '800', color: status.color, lineHeight: '1' }}>{status.text}</span>
+                            <span style={{ fontSize: '13.5px', fontWeight: '800', color: status.color, lineHeight: '1', whiteSpace: 'nowrap' }}>{status.text}</span>
                           </div>
                         </td>
 
@@ -774,7 +799,7 @@ export default function HistoryPage() {
                             <MapPin size={18} color="#3b82f6" style={{ flexShrink: 0 }} />
                             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                               {displayName.split('|').map((str: string, index: number) => (
-                                <span key={index} style={{ fontWeight: '700', color: '#3b82f6', fontSize: '14px', lineHeight: '1.4' }}>
+                                <span key={index} style={{ fontWeight: '700', color: '#3b82f6', fontSize: '14px', lineHeight: '1.4', whiteSpace: 'nowrap' }}>
                                   {str.trim()}
                                 </span>
                               ))}
@@ -790,7 +815,7 @@ export default function HistoryPage() {
                             <button
                               className="btn-delete-row"
                               onClick={() => handleDeleteRecord(data.key)}
-                              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 12px', borderRadius: '8px' }}
+                              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer' }}
                             >
                               <Trash2 size={14} /> ลบ
                             </button>
@@ -805,8 +830,8 @@ export default function HistoryPage() {
 
             {/* ---------------- Pagination ---------------- */}
             {sortedData.length > 0 && !isLoadingData && (
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', backgroundColor: '#f8fafc', borderTop: '1px solid #e2e8f0' }}>
-                <span style={{ fontSize: '14px', fontWeight: '600', color: '#64748b' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', backgroundColor: '#f8fafc', borderTop: '1px solid #e2e8f0', flexWrap: 'wrap', gap: '10px' }}>
+                <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>
                   แสดง {startIndex + 1} ถึง {Math.min(startIndex + rowsPerPage, sortedData.length)} จากทั้งหมด {sortedData.length} รายการ
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -834,96 +859,7 @@ export default function HistoryPage() {
         </div>
       </div>
 
-      {/* ---------------- Settings Modal (Admin) ---------------- */}
-      {isSettingsModalOpen && (
-        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', backgroundColor: 'rgba(15, 23, 42, 0.6)', backdropFilter: 'blur(8px)', zIndex: 9999, display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <div style={{ backgroundColor: 'white', width: '90%', maxWidth: '750px', borderRadius: '24px', padding: '32px', boxShadow: '0 25px 50px -12px rgba(0,0,0,0.25)', maxHeight: '90vh', overflowY: 'auto' }}>
-
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                <div style={{ backgroundColor: '#eff6ff', padding: '10px', borderRadius: '12px', color: '#2563eb' }}>
-                  <Server size={24} strokeWidth={2.5} />
-                </div>
-                <h2 style={{ margin: 0, fontSize: '20px', fontWeight: '900', color: '#0f172a' }}>จัดการจุดตรวจวัด (Node Management)</h2>
-              </div>
-              <button onClick={() => setIsSettingsModalOpen(false)} style={{ border: 'none', background: '#f1f5f9', borderRadius: '50%', width: '36px', height: '36px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#64748b', transition: '0.2s' }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#e2e8f0'} onMouseOut={e => e.currentTarget.style.backgroundColor = '#f1f5f9'}>
-                <X size={18} strokeWidth={2.5} />
-              </button>
-            </div>
-
-            <h3 style={{ fontSize: '16px', fontWeight: '900', color: '#0f172a', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <MapPin size={18} color="#64748b" /> รายการเซนเซอร์ในระบบ
-            </h3>
-            
-            <div style={{ border: '1px solid #e2e8f0', borderRadius: '16px', overflow: 'hidden' }}>
-              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', backgroundColor: 'white' }}>
-                <thead style={{ backgroundColor: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-                  <tr>
-                    <th style={{ padding: '16px', fontSize: '13px', fontWeight: '800', color: '#475569' }}>Device ID</th>
-                    <th style={{ padding: '16px', fontSize: '13px', fontWeight: '800', color: '#475569' }}>ตั้งชื่อให้เซนเซอร์</th>
-                    <th style={{ padding: '16px', fontSize: '13px', fontWeight: '800', color: '#475569', textAlign: 'center' }}>สถานะแผนที่</th>
-                    <th style={{ padding: '16px', fontSize: '13px', fontWeight: '800', color: '#ef4444', textAlign: 'center' }}>ล้างข้อมูล</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {uniqueIds.map(id => (
-                    <tr key={id as string} style={{ borderBottom: '1px solid #f1f5f9' }}>
-                      <td style={{ padding: '16px', fontWeight: '800', color: '#64748b', fontSize: '14px' }}>{id}</td>
-
-                      <td style={{ padding: '16px' }}>
-                        <div style={{ display: 'flex', gap: '8px' }}>
-                          <input
-                            type="text"
-                            defaultValue={nodeNames[id as string] || id as string}
-                            id={`input-node-${id}`}
-                            style={{ width: '100%', padding: '10px 12px', borderRadius: '10px', border: '1px solid #cbd5e1', fontWeight: '700', fontSize: '14px', color: '#0f172a', outline: 'none' }}
-                          />
-                          <button
-                            title="บันทึกชื่อ"
-                            onClick={() => handleSaveNodeName(id as string)}
-                            style={{ backgroundColor: '#eff6ff', color: '#2563eb', border: 'none', padding: '10px', borderRadius: '10px', cursor: 'pointer', transition: '0.2s' }}
-                            onMouseOver={e => e.currentTarget.style.backgroundColor = '#dbeafe'} onMouseOut={e => e.currentTarget.style.backgroundColor = '#eff6ff'}
-                          >
-                            <Save size={18} strokeWidth={2.5} />
-                          </button>
-                        </div>
-                      </td>
-
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
-                        <button
-                          onClick={() => handleToggleHide(id as string)}
-                          style={{
-                            backgroundColor: hiddenNodes.includes(id as string) ? '#fef2f2' : '#f0fdf4',
-                            color: hiddenNodes.includes(id as string) ? '#ef4444' : '#10b981',
-                            border: `1px solid ${hiddenNodes.includes(id as string) ? '#fecaca' : '#bbf7d0'}`,
-                            padding: '8px 14px', borderRadius: '20px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: '800', fontSize: '13px', transition: 'all 0.2s', width: '110px', justifyContent: 'center'
-                          }}
-                          onMouseOver={e => e.currentTarget.style.transform = 'scale(1.05)'} onMouseOut={e => e.currentTarget.style.transform = 'scale(1)'}
-                        >
-                          {hiddenNodes.includes(id as string) ? <EyeOff size={16} strokeWidth={2.5} /> : <Eye size={16} strokeWidth={2.5} />}
-                          {hiddenNodes.includes(id as string) ? 'ถูกซ่อน' : 'แสดงผล'}
-                        </button>
-                      </td>
-
-                      <td style={{ padding: '16px', textAlign: 'center' }}>
-                        <button
-                          onClick={() => handleWipeNodeData(id as string)}
-                          style={{ backgroundColor: 'white', color: '#ef4444', border: '1px solid #fecaca', padding: '8px 14px', borderRadius: '10px', cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '6px', fontWeight: '800', fontSize: '13px', transition: 'all 0.2s' }}
-                          onMouseOver={e => { e.currentTarget.style.backgroundColor = '#fef2f2'; e.currentTarget.style.transform = 'scale(1.05)' }} onMouseOut={e => { e.currentTarget.style.backgroundColor = 'white'; e.currentTarget.style.transform = 'scale(1)' }}
-                        >
-                          <Trash2 size={16} strokeWidth={2.5} /> ล้างข้อมูล
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ---------------- Global Styles ---------------- */}
+      {/* ---------------- Global Styles & Mobile CSS ---------------- */}
       <style dangerouslySetInnerHTML={{
         __html: `
         @keyframes spin {
@@ -932,6 +868,86 @@ export default function HistoryPage() {
         }
         .spin-icon {
           animation: spin 1s linear infinite;
+        }
+
+        /* สำหรับหน้าจอมือถือ (ความกว้างไม่เกิน 768px) */
+        @media (max-width: 768px) {
+            .desktop-only { display: none !important; }
+            .mobile-menu-btn { 
+                display: flex !important; 
+                align-items: center; 
+                justify-content: center; 
+                background: #eff6ff; 
+                border: none; 
+                color: #2563eb; 
+                padding: 8px; 
+                border-radius: 12px; 
+                cursor: pointer; 
+                transition: 0.2s;
+            }
+            .mobile-menu-btn:active { transform: scale(0.95); background: #dbeafe; }
+            
+            /* Navbar ย่อส่วนและดึงให้ชื่อเว็บอยู่ครบ */
+            .navbar { padding: 10px 12px !important; height: 65px !important; }
+            .nav-right { gap: 6px !important; }
+            .brand { gap: 8px !important; }
+            
+            /* บังคับแสดงชื่อเว็บ AQI Monitor KSU บนมือถือ */
+            .brand-text { 
+                font-size: 16px !important; 
+                white-space: nowrap !important; 
+                display: inline-block !important; 
+            }
+
+            .brand-icon { padding: 5px !important; border-radius: 8px !important; }
+            .brand-icon svg { width: 16px !important; height: 16px !important; }
+            
+            .mobile-dropdown {
+                position: absolute; top: 100%; left: 0; width: 100%; box-sizing: border-box;
+                background-color: rgba(255, 255, 255, 0.98); backdrop-filter: blur(10px);
+                border-bottom: 1px solid #e2e8f0; padding: 15px 20px;
+                display: flex; flex-direction: column; gap: 10px; z-index: 1005;
+                box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+            }
+
+            /* จัดการส่วน Filter และปุ่มต่างๆ ให้เป็นระเบียบขึ้นบนจอมือถือ */
+            .container { padding: 10px !important; }
+            .card { padding: 20px 15px !important; }
+            .header-row {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                gap: 15px !important;
+            }
+            .filter-group {
+                justify-content: space-between !important;
+                padding: 10px 12px !important;
+            }
+            .action-buttons {
+                width: 100%;
+            }
+            .btn-export, .btn-config, .btn-clear {
+                flex: 1;
+                justify-content: center;
+                padding: 10px !important;
+            }
+            
+            /* จัดกล่องสถิติให้เป็น 2 คอลัมน์ ไม่ให้เรียงยาวเป็นแถวเดียว */
+            .stats-grid {
+                grid-template-columns: 1fr 1fr !important;
+                gap: 10px !important;
+            }
+            .stat-card {
+                padding: 15px !important;
+                gap: 8px !important;
+            }
+            .stat-card > div:last-child {
+                font-size: 22px !important; /* ลดขนาดตัวเลขสถิติลงนิดนึง */
+            }
+        }
+
+        @media (min-width: 769px) {
+            .mobile-menu-btn { display: none !important; }
+            .mobile-dropdown { display: none !important; }
         }
       `}} />
     </>
