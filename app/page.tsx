@@ -281,7 +281,6 @@ export default function Home() {
         if (!mapRef.current) {
             mapRef.current = L.map("map", { zoomControl: false }).setView([16.4477, 103.5314], 16);
             tileLayerRef.current = L.tileLayer(MAP_STYLES[mapStyle].url, { maxZoom: 19 }).addTo(mapRef.current);
-            L.control.zoom({ position: 'bottomright' }).addTo(mapRef.current);
         }
         fetchInitialData();
     });
