@@ -2,11 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-
-// Import ไฟล์ CSS สำหรับมือถือ
 import '../mobile.css';
 
-// นำเข้าไอคอน (เพิ่ม Menu และ X สำหรับมือถือ)
 import { 
     Wind, LayoutDashboard, History, Info as InfoIcon, Clock, BookOpen, Menu, X
 } from 'lucide-react';
@@ -15,7 +12,6 @@ export default function InfoPage() {
   const [clock, setClock] = useState("กำลังโหลดเวลา...");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // ฟังก์ชันนาฬิกา
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
@@ -54,7 +50,6 @@ export default function InfoPage() {
                 <span>{clock}</span>
             </div>
 
-            {/* ปุ่ม Hamburger สำหรับมือถือ */}
             <button 
                 className="mobile-menu-btn"
                 onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -63,7 +58,6 @@ export default function InfoPage() {
             </button>
         </div>
 
-        {/* เมนูที่กางลงมาบนมือถือ */}
         {isMobileMenuOpen && (
             <div className="mobile-dropdown">
                 <Link href="/" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#475569', fontWeight: '700', padding: '12px', textDecoration: 'none' }}>
@@ -86,22 +80,23 @@ export default function InfoPage() {
                 <div style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', padding: '10px', borderRadius: '12px', color: 'white', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)' }}>
                     <BookOpen size={24} strokeWidth={2} />
                 </div>
-                <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0, letterSpacing: '-0.5px' }}>เกณฑ์ดัชนีคุณภาพอากาศของประเทศไทย</h2>
+                <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0, letterSpacing: '-0.5px' }}>เกณฑ์การปฏิบัติตนตามระดับค่าสีฝุ่น PM2.5</h2>
             </div>
             
             <div className="table-responsive" style={{ border: '1px solid #e2e8f0', borderRadius: '16px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
                 <table style={{ minWidth: '800px', width: '100%', borderCollapse: 'collapse', backgroundColor: '#ffffff' }}>
                     <thead>
                         <tr style={{ backgroundColor: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-                            <th style={{ padding: '20px 24px', color: '#475569', fontWeight: '800', width: '15%', textAlign: 'center', whiteSpace: 'nowrap' }}>ช่วงค่า AQI</th>
-                            <th style={{ padding: '20px 24px', color: '#475569', fontWeight: '800', width: '20%', textAlign: 'center', whiteSpace: 'nowrap' }}>คุณภาพอากาศ</th>
-                            <th style={{ padding: '20px 24px', color: '#475569', fontWeight: '800', width: '65%', textAlign: 'left' }}>ข้อแนะนำในการปฏิบัติตน</th>
+                            <th style={{ padding: '20px 24px', color: '#475569', fontWeight: '800', width: '20%', textAlign: 'center', whiteSpace: 'nowrap' }}>ปริมาณฝุ่น PM2.5<br/><span style={{fontSize: '13px', fontWeight: '600'}}>(µg/m³)</span></th>
+                            <th style={{ padding: '20px 24px', color: '#475569', fontWeight: '800', width: '15%', textAlign: 'center', whiteSpace: 'nowrap' }}>คุณภาพอากาศ</th>
+                            <th style={{ padding: '20px 24px', color: '#475569', fontWeight: '800', width: '65%', textAlign: 'left' }}>การปฏิบัติตน (อ้างอิงกรมอนามัย)</th>
                         </tr>
                     </thead>
                     <tbody>
+                        {/* 🌟 อัปเดตเกณฑ์เป็นจำนวนเต็มทั้งหมด */}
                         {/* ดีมาก */}
                         <tr style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
-                            <td style={{ padding: '24px', fontWeight: '900', color: '#0f172a', fontSize: '18px', textAlign: 'center' }}>0 - 25</td>
+                            <td style={{ padding: '24px', fontWeight: '900', color: '#0f172a', fontSize: '18px', textAlign: 'center', whiteSpace: 'nowrap' }}>0 - 15</td>
                             <td style={{ padding: '24px', textAlign: 'center' }}>
                                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', padding: '6px 14px', borderRadius: '12px' }}>
                                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#0ea5e9', boxShadow: '0 0 8px #0ea5e9' }}></div>
@@ -109,13 +104,16 @@ export default function InfoPage() {
                                 </div>
                             </td>
                             <td style={{ padding: '24px', color: '#475569', fontSize: '15px', lineHeight: '1.6', textAlign: 'left' }}>
-                                <span style={{ fontWeight: '800', color: '#0f172a' }}>ประชาชนทุกคน</span> สามารถดำเนินชีวิตได้ตามปกติ
+                                <span style={{ fontWeight: '800', color: '#0f172a' }}>ประชาชนทุกคน และ กลุ่มเสี่ยง</span>
+                                <ul style={{ margin: '0', paddingLeft: '24px', listStyleType: 'disc', color: '#475569' }}>
+                                    <li>ทำกิจกรรมได้ตามปกติ</li>
+                                </ul>
                             </td>
                         </tr>
 
                         {/* ดี */}
                         <tr style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
-                            <td style={{ padding: '24px', fontWeight: '900', color: '#0f172a', fontSize: '18px', textAlign: 'center' }}>26 - 50</td>
+                            <td style={{ padding: '24px', fontWeight: '900', color: '#0f172a', fontSize: '18px', textAlign: 'center', whiteSpace: 'nowrap' }}>16 - 25</td>
                             <td style={{ padding: '24px', textAlign: 'center' }}>
                                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#f0fdf4', border: '1px solid #a7f3d0', padding: '6px 14px', borderRadius: '12px' }}>
                                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', boxShadow: '0 0 8px #10b981' }}></div>
@@ -124,17 +122,17 @@ export default function InfoPage() {
                             </td>
                             <td style={{ padding: '24px', color: '#475569', fontSize: '15px', lineHeight: '1.6', textAlign: 'left' }}>
                                 <div style={{ marginBottom: '8px' }}>
-                                    <span style={{ fontWeight: '800', color: '#0f172a' }}>ประชาชนทั่วไป</span> สามารถทำกิจกรรมกลางแจ้งได้ตามปกติ
+                                    <span style={{ fontWeight: '800', color: '#0f172a' }}>ประชาชนทุกคน</span> ทำกิจกรรมได้ตามปกติ
                                 </div>
                                 <div>
-                                    <span style={{ fontWeight: '800', color: '#ef4444' }}>ประชาชนกลุ่มเสี่ยง</span> ควรสังเกตอาการผิดปกติ เช่น ไอ หายใจลำบาก ระคายเคืองตา
+                                    <span style={{ fontWeight: '800', color: '#ef4444' }}>กลุ่มเสี่ยง</span> เลี่ยงการทำกิจกรรมที่ใช้แรงมาก และสังเกตอาการตนเอง
                                 </div>
                             </td>
                         </tr>
 
                         {/* ปานกลาง */}
                         <tr style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
-                            <td style={{ padding: '24px', fontWeight: '900', color: '#0f172a', fontSize: '18px', textAlign: 'center' }}>51 - 100</td>
+                            <td style={{ padding: '24px', fontWeight: '900', color: '#0f172a', fontSize: '18px', textAlign: 'center', whiteSpace: 'nowrap' }}>26 - 37</td>
                             <td style={{ padding: '24px', textAlign: 'center' }}>
                                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#fffbeb', border: '1px solid #fde68a', padding: '6px 14px', borderRadius: '12px' }}>
                                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#f59e0b', boxShadow: '0 0 8px #f59e0b' }}></div>
@@ -143,15 +141,11 @@ export default function InfoPage() {
                             </td>
                             <td style={{ padding: '24px', color: '#475569', fontSize: '15px', lineHeight: '1.6', textAlign: 'left' }}>
                                 <div style={{ marginBottom: '12px' }}>
-                                    <span style={{ fontWeight: '800', color: '#0f172a', display: 'block', marginBottom: '4px' }}>ประชาชนทั่วไป</span> 
-                                    ลดระยะเวลาการทำกิจกรรมหรือการออกกำลังกายกลางแจ้งที่ใช้แรงมาก
-                                </div>
-                                <div>
-                                    <span style={{ fontWeight: '800', color: '#ef4444', display: 'block', marginBottom: '4px' }}>ประชาชนกลุ่มเสี่ยง</span>
+                                    <span style={{ fontWeight: '800', color: '#0f172a', display: 'block', marginBottom: '4px' }}>ประชาชนทุกคน และ กลุ่มเสี่ยง</span>
                                     <ul style={{ margin: '0', paddingLeft: '24px', listStyleType: 'disc', color: '#475569' }}>
-                                        <li style={{ marginBottom: '6px' }}>ใช้อุปกรณ์ป้องกันตนเอง เช่น หน้ากากป้องกัน PM2.5 ทุกครั้งที่ออกนอกอาคาร</li>
-                                        <li style={{ marginBottom: '6px' }}>ลดระยะเวลาการทำกิจกรรมกลางแจ้งที่ใช้แรงมาก</li>
-                                        <li>หากมีอาการผิดปกติให้รีบปรึกษาแพทย์</li>
+                                        <li style={{ marginBottom: '6px' }}>ลดระยะเวลาการทำกิจกรรมที่ใช้แรงมาก / การออกกำลังกายกลางแจ้ง</li>
+                                        <li style={{ marginBottom: '6px' }}>สวมหน้ากากป้องกันฝุ่นละอองทุกครั้งเมื่ออยู่กลางแจ้ง</li>
+                                        <li>หากมีอาการผิดปกติ ให้รีบพบแพทย์</li>
                                     </ul>
                                 </div>
                             </td>
@@ -159,7 +153,7 @@ export default function InfoPage() {
 
                         {/* เริ่มมีผลกระทบ */}
                         <tr style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
-                            <td style={{ padding: '24px', fontWeight: '900', color: '#0f172a', fontSize: '18px', textAlign: 'center' }}>101 - 200</td>
+                            <td style={{ padding: '24px', fontWeight: '900', color: '#0f172a', fontSize: '18px', textAlign: 'center', whiteSpace: 'nowrap' }}>38 - 75</td>
                             <td style={{ padding: '24px', textAlign: 'center' }}>
                                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#fff7ed', border: '1px solid #fed7aa', padding: '6px 14px', borderRadius: '12px' }}>
                                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#f97316', boxShadow: '0 0 8px #f97316' }}></div>
@@ -168,18 +162,17 @@ export default function InfoPage() {
                             </td>
                             <td style={{ padding: '24px', color: '#475569', fontSize: '15px', lineHeight: '1.6', textAlign: 'left' }}>
                                 <div style={{ marginBottom: '12px' }}>
-                                    <span style={{ fontWeight: '800', color: '#0f172a', display: 'block', marginBottom: '4px' }}>ประชาชนทั่วไป</span>
+                                    <span style={{ fontWeight: '800', color: '#0f172a', display: 'block', marginBottom: '4px' }}>ประชาชนทุกคน</span>
                                     <ul style={{ margin: '0', paddingLeft: '24px', listStyleType: 'disc', color: '#475569' }}>
-                                        <li style={{ marginBottom: '6px' }}>ใช้อุปกรณ์ป้องกันตนเอง เช่น หน้ากากป้องกัน PM2.5</li>
-                                        <li style={{ marginBottom: '6px' }}>จำกัดระยะเวลาการทำกิจกรรมกลางแจ้ง</li>
-                                        <li>ควรสังเกตอาการผิดปกติ</li>
+                                        <li style={{ marginBottom: '6px' }}>หลีกเลี่ยงการออกกำลังกายกลางแจ้ง / การทำงานที่ใช้แรงมาก</li>
+                                        <li style={{ marginBottom: '6px' }}>สวมหน้ากากป้องกันฝุ่นละอองทุกครั้งเมื่ออยู่กลางแจ้ง</li>
+                                        <li>หากมีอาการผิดปกติ ให้รีบพบแพทย์</li>
                                     </ul>
                                 </div>
                                 <div>
-                                    <span style={{ fontWeight: '800', color: '#ef4444', display: 'block', marginBottom: '4px' }}>ประชาชนกลุ่มเสี่ยง</span>
+                                    <span style={{ fontWeight: '800', color: '#ef4444', display: 'block', marginBottom: '4px' }}>กลุ่มเสี่ยง</span>
                                     <ul style={{ margin: '0', paddingLeft: '24px', listStyleType: 'disc', color: '#475569' }}>
-                                        <li style={{ marginBottom: '6px' }}>เลี่ยงการทำกิจกรรมหรือออกกำลังกายกลางแจ้งที่ใช้แรงมาก</li>
-                                        <li>ปฏิบัติตามคำแนะนำของแพทย์อย่างเคร่งครัด</li>
+                                        <li>หลีกเลี่ยงการทำกิจกรรมนอกอาคาร และควรเฝ้าระวังตนเอง</li>
                                     </ul>
                                 </div>
                             </td>
@@ -187,7 +180,7 @@ export default function InfoPage() {
 
                         {/* มีผลกระทบ */}
                         <tr style={{ transition: 'background-color 0.2s', backgroundColor: '#fef2f2' }}>
-                            <td style={{ padding: '24px', fontWeight: '900', color: '#ef4444', fontSize: '18px', textAlign: 'center' }}>201 ขึ้นไป</td>
+                            <td style={{ padding: '24px', fontWeight: '900', color: '#ef4444', fontSize: '18px', textAlign: 'center', whiteSpace: 'nowrap' }}>76 ขึ้นไป</td>
                             <td style={{ padding: '24px', textAlign: 'center' }}>
                                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#ffffff', border: '1px solid #fecaca', padding: '6px 14px', borderRadius: '12px' }}>
                                     <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ef4444', boxShadow: '0 0 8px #ef4444' }}></div>
@@ -196,12 +189,12 @@ export default function InfoPage() {
                             </td>
                             <td style={{ padding: '24px', color: '#475569', fontSize: '15px', lineHeight: '1.6', textAlign: 'left' }}>
                                 <div>
-                                    <span style={{ fontWeight: '900', color: '#ef4444', display: 'block', marginBottom: '4px', fontSize: '16px' }}>ประชาชนทุกคน ⚠️</span>
+                                    <span style={{ fontWeight: '900', color: '#ef4444', display: 'block', marginBottom: '4px', fontSize: '16px' }}>ประชาชนทุกคน และ กลุ่มเสี่ยง ⚠️</span>
                                     <ul style={{ margin: '0', paddingLeft: '24px', listStyleType: 'disc', color: '#0f172a', fontWeight: '600' }}>
-                                        <li style={{ marginBottom: '6px' }}>งดกิจกรรมกลางแจ้งทุกชนิด</li>
-                                        <li style={{ marginBottom: '6px' }}>หากจำเป็นต้องออกนอกอาคาร ให้สวมหน้ากากป้องกัน PM2.5 ตลอดเวลา</li>
-                                        <li style={{ marginBottom: '6px' }}>หากมีอาการผิดปกติให้รีบไปพบแพทย์</li>
-                                        <li>ผู้ที่มีโรคประจำตัว ควรอยู่ในพื้นที่ปลอดภัย (Safe Zone) เตรียมยาและอุปกรณ์ให้พร้อม</li>
+                                        <li style={{ marginBottom: '6px' }}>งดทำกิจกรรมนอกอาคาร และการออกกำลังกายกลางแจ้ง</li>
+                                        <li style={{ marginBottom: '6px' }}>ให้อยู่ในห้องปลอดฝุ่น และสวมหน้ากากกันฝุ่นทุกครั้ง</li>
+                                        <li style={{ marginBottom: '6px' }}>หากมีอาการผิดปกติ ให้รีบพบแพทย์</li>
+                                        <li>ผู้ที่มีโรคประจำตัวเตรียมยาและอุปกรณ์ที่จำเป็นให้พร้อม รวมถึงปฏิบัติตามคำแนะนำทางการแพทย์</li>
                                     </ul>
                                 </div>
                             </td>
@@ -212,15 +205,13 @@ export default function InfoPage() {
             
             <div style={{ marginTop: '24px', fontSize: '13px', fontWeight: '600', color: '#94a3b8', textAlign: 'right', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '6px' }}>
                 <InfoIcon size={14} />
-                * ข้อมูลอ้างอิงจาก กรมควบคุมมลพิษ (Pollution Control Department)
+                * อ้างอิงตามเกณฑ์กรมอนามัย (Department of Health) ปรับค่ามาตรฐานใหม่
             </div>
         </div>
       </div>
 
-      {/* ---------------- Global Styles & Mobile CSS ---------------- */}
       <style dangerouslySetInnerHTML={{
         __html: `
-        /* สำหรับหน้าจอมือถือ (ความกว้างไม่เกิน 768px) */
         @media (max-width: 768px) {
             .desktop-only { display: none !important; }
             .mobile-menu-btn { 
@@ -247,9 +238,8 @@ export default function InfoPage() {
 
             .container { padding: 15px !important; }
             .card { padding: 20px 15px !important; }
-            .header-row h2 { font-size: 18px !important; } /* ลดขนาดหัวข้อลงนิดหน่อยในมือถือ */
+            .header-row h2 { font-size: 17px !important; }
 
-            /* ปรับตารางให้กะทัดรัดขึ้นบนมือถือเพื่อให้อ่านง่ายตอนเลื่อน */
             th, td { padding: 15px 12px !important; }
         }
 

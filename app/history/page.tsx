@@ -31,9 +31,6 @@ ChartJS.register(
   Legend
 );
 
-// ==========================================
-// Components
-// ==========================================
 const ProStatCard = ({ icon, title, value, color }: any) => (
   <div className="stat-card"
     style={{
@@ -61,17 +58,12 @@ const ProStatCard = ({ icon, title, value, color }: any) => (
   </div>
 );
 
-// ==========================================
-// Main Page Component
-// ==========================================
 export default function HistoryPage() {
-  // ---------------- State ----------------
   const [allData, setAllData] = useState<any[]>([]);
   const [filteredData, setFilteredData] = useState<any[]>([]);
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
 
-  // Filters
   const [selectedNodeFilter, setSelectedNodeFilter] = useState('all');
   const [filterType, setFilterType] = useState('day');
   const [dateInput, setDateInput] = useState('');
@@ -79,22 +71,16 @@ export default function HistoryPage() {
   const [startDate, setStartDate] = useState('');
   const [endDate, setEndDate] = useState('');
 
-  // Table & Pagination
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const rowsPerPage = 50;
 
-  // System & Misc
   const [clock, setClock] = useState("กำลังโหลดเวลา...");
   const [nodeNames, setNodeNames] = useState<Record<string, string>>({});
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [hiddenNodes, setHiddenNodes] = useState<string[]>([]);
-  
-  // Mobile Menu
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  // ---------------- Effects ----------------
-  // Auth Check
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -107,7 +93,6 @@ export default function HistoryPage() {
     return () => authListener.subscription.unsubscribe();
   }, []);
 
-  // Fetch Config (Hidden Nodes)
   useEffect(() => {
     const fetchConfig = async () => {
       const { data: hiddenData } = await supabase.from('config').select('value').eq('key', 'hidden_nodes').single();
@@ -123,7 +108,6 @@ export default function HistoryPage() {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  // Fetch Node Names
   const fetchNodeNames = async () => {
     const { data } = await supabase.from('node_names').select('*');
     if (data) {
@@ -136,7 +120,6 @@ export default function HistoryPage() {
   };
   useEffect(() => { fetchNodeNames(); }, []);
 
-  // Default Dates
   useEffect(() => {
     const today = new Date();
     const yyyy = today.getFullYear();
@@ -148,7 +131,6 @@ export default function HistoryPage() {
     setEndDate(todayStr);
   }, []);
 
-  // Live Clock
   useEffect(() => {
     const timer = setInterval(() => {
       const now = new Date();
@@ -157,7 +139,6 @@ export default function HistoryPage() {
     return () => clearInterval(timer);
   }, []);
 
-  // Fetch Sensor Data (History)
   useEffect(() => {
     const fetchHistory = async () => {
       setIsLoadingData(true);
@@ -192,20 +173,13 @@ export default function HistoryPage() {
       if (allRecords.length > 0) {
         const formattedData = allRecords.map((item) => {
           const date = new Date(item.created_at);
-
           const formatter = new Intl.DateTimeFormat('en-GB', {
             timeZone: 'Asia/Bangkok',
-            day: '2-digit',
-            month: '2-digit',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            second: '2-digit',
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit', second: '2-digit',
             hour12: false
           });
-
           const thaiTimeStr = formatter.format(date).replace(',', '');
-
           return {
             key: item.id,
             timestamp: thaiTimeStr,
@@ -225,7 +199,6 @@ export default function HistoryPage() {
     };
 
     fetchHistory();
-
     const channel = supabase.channel('sensor_data_history')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'sensor_data' }, () => {
         fetchHistory();
@@ -233,11 +206,9 @@ export default function HistoryPage() {
     return () => { supabase.removeChannel(channel); };
   }, []);
 
-  // Process Filters
   useEffect(() => {
     let result = allData;
 
-    // 1. Filter by Date
     if (filterType === 'day' && dateInput) {
       const [y, m, d] = dateInput.split('-');
       const searchStr = `${d}/${m}/${y}`;
@@ -252,7 +223,6 @@ export default function HistoryPage() {
       result = result.filter(item => item.rawDate >= start && item.rawDate <= end);
     }
 
-    // 2. Filter by Node
     if (selectedNodeFilter !== 'all') {
       result = result.filter(item => item.deviceId === selectedNodeFilter);
     }
@@ -262,18 +232,13 @@ export default function HistoryPage() {
       if (index < result.length - 1) {
         trendDiff = item.pm25 - result[index + 1].pm25;
       }
-      return {
-        ...item,
-        displayNo: result.length - index,
-        trendDiff
-      };
+      return { ...item, displayNo: result.length - index, trendDiff };
     });
 
     setFilteredData(resultProcessed);
     setCurrentPage(1);
   }, [allData, filterType, dateInput, monthInput, startDate, endDate, selectedNodeFilter]);
 
-  // ---------------- Helpers & Logic ----------------
   const getStats = () => {
     if (filteredData.length === 0) return { avg: '--', max: '--', min: '--', count: 0 };
     let sum = 0, maxVal = -Infinity, minVal = Infinity;
@@ -292,31 +257,26 @@ export default function HistoryPage() {
   };
   const stats = getStats();
 
+  // 🌟 อัปเดตเป็นจำนวนเต็ม (ไม่มีทศนิยม)
   const getAQIStatus = (pm25: number) => {
-    if (pm25 <= 25) return { text: "ดีมาก", color: '#0ea5e9', bg: '#f0f9ff', border: '#bae6fd' };
-    if (pm25 <= 50) return { text: "ดี", color: '#10b981', bg: '#f0fdf4', border: '#a7f3d0' };
-    if (pm25 <= 100) return { text: "ปานกลาง", color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' };
-    if (pm25 <= 200) return { text: "เริ่มมีผล", color: '#f97316', bg: '#fff7ed', border: '#fed7aa' };
+    if (pm25 <= 15) return { text: "ดีมาก", color: '#0ea5e9', bg: '#f0f9ff', border: '#bae6fd' };
+    if (pm25 <= 25) return { text: "ดี", color: '#10b981', bg: '#f0fdf4', border: '#a7f3d0' };
+    if (pm25 <= 37) return { text: "ปานกลาง", color: '#f59e0b', bg: '#fffbeb', border: '#fde68a' };
+    if (pm25 <= 75) return { text: "เริ่มมีผล", color: '#f97316', bg: '#fff7ed', border: '#fed7aa' };
     return { text: "มีผลกระทบ", color: '#ef4444', bg: '#fef2f2', border: '#fecaca' };
   };
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
     setSortConfig({ key, direction });
   };
 
   const sortedData = [...filteredData].sort((a, b) => {
     if (!sortConfig) return 0;
     const { key, direction } = sortConfig;
-    let valA = a[key];
-    let valB = b[key];
-
-    if (valA == null) valA = -Infinity;
-    if (valB == null) valB = -Infinity;
-
+    let valA = a[key], valB = b[key];
+    if (valA == null) valA = -Infinity; if (valB == null) valB = -Infinity;
     if (valA < valB) return direction === 'asc' ? -1 : 1;
     if (valA > valB) return direction === 'asc' ? 1 : -1;
     return 0;
@@ -327,15 +287,10 @@ export default function HistoryPage() {
   const currentTableData = sortedData.slice(startIndex, startIndex + rowsPerPage);
 
   const renderSortIcon = (columnKey: string) => {
-    if (sortConfig?.key !== columnKey) {
-      return <ArrowUpDown size={14} color="#cbd5e1" />;
-    }
-    return sortConfig.direction === 'asc'
-      ? <ArrowUp size={16} color="#2563eb" strokeWidth={3} />
-      : <ArrowDown size={16} color="#2563eb" strokeWidth={3} />;
+    if (sortConfig?.key !== columnKey) return <ArrowUpDown size={14} color="#cbd5e1" />;
+    return sortConfig.direction === 'asc' ? <ArrowUp size={16} color="#2563eb" strokeWidth={3} /> : <ArrowDown size={16} color="#2563eb" strokeWidth={3} />;
   };
 
-  // Chart Setup
   const chartDataReversed = [...filteredData].reverse();
   const chartData = {
     labels: chartDataReversed.map(d => d.timestamp ? d.timestamp.split(' ')[1] : '-'),
@@ -343,12 +298,13 @@ export default function HistoryPage() {
       {
         label: 'ค่าฝุ่น PM2.5 (µg/m³)',
         data: chartDataReversed.map(d => d.pm25),
+        // 🌟 อัปเดตสีของกราฟแท่ง (ไม่มีทศนิยม)
         backgroundColor: chartDataReversed.map(d => {
           const v = d.pm25 || 0;
-          if (v <= 25) return 'rgba(14, 165, 233, 0.85)';
-          if (v <= 50) return 'rgba(16, 185, 129, 0.85)';
-          if (v <= 100) return 'rgba(245, 158, 11, 0.85)';
-          if (v <= 200) return 'rgba(249, 115, 22, 0.85)';
+          if (v <= 15) return 'rgba(14, 165, 233, 0.85)';
+          if (v <= 25) return 'rgba(16, 185, 129, 0.85)';
+          if (v <= 37) return 'rgba(245, 158, 11, 0.85)';
+          if (v <= 75) return 'rgba(249, 115, 22, 0.85)';
           return 'rgba(239, 68, 68, 0.85)';
         }),
         borderRadius: 4,
@@ -358,41 +314,17 @@ export default function HistoryPage() {
   };
 
   const chartOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
+    responsive: true, maintainAspectRatio: false,
     plugins: {
-      legend: { display: false },
-      title: { display: false },
-      tooltip: {
-        backgroundColor: 'rgba(15, 23, 42, 0.9)',
-        titleFont: { family: 'Sarabun', size: 13 },
-        bodyFont: { family: 'Sarabun', size: 14, weight: 'bold' as const },
-        padding: 12,
-        cornerRadius: 8,
-        displayColors: false,
-      }
+      legend: { display: false }, title: { display: false },
+      tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', titleFont: { family: 'Sarabun', size: 13 }, bodyFont: { family: 'Sarabun', size: 14, weight: 'bold' as const }, padding: 12, cornerRadius: 8, displayColors: false }
     },
     scales: {
-      y: {
-        beginAtZero: true,
-        suggestedMax: 200,
-        grid: { color: '#f1f5f9' },
-        ticks: { font: { family: 'Sarabun' }, color: '#64748b' }
-      },
-      x: {
-        grid: { display: false },
-        ticks: {
-          font: { family: 'Sarabun' },
-          color: '#64748b',
-          autoSkip: true,
-          maxRotation: 45,
-          minRotation: 45
-        }
-      }
+      y: { beginAtZero: true, suggestedMax: 200, grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Sarabun' }, color: '#64748b' } },
+      x: { grid: { display: false }, ticks: { font: { family: 'Sarabun' }, color: '#64748b', autoSkip: true, maxRotation: 45, minRotation: 45 } }
     }
   };
 
-  // Export CSV
   const handleExportCSV = () => {
     if (filteredData.length === 0) { alert("ไม่มีข้อมูลที่จะ Export"); return; }
     let csvContent = "Date Time,PM2.5,Temperature,Humidity,Pressure,Lat,Lng,Node\n";
@@ -411,11 +343,9 @@ export default function HistoryPage() {
 
   const uniqueIds = Array.from(new Set(allData.map(d => d.deviceId).filter(id => id)));
 
-  // Admin Actions
   const handleSaveNodeName = async (deviceId: string) => {
     const inputElement = document.getElementById(`input-node-${deviceId}`) as HTMLInputElement;
     if (!inputElement || !inputElement.value.trim()) return;
-
     const newName = inputElement.value.trim();
     const { error } = await supabase.from('node_names').upsert({ device_id: deviceId, display_name: newName });
     if (!error) {
@@ -426,11 +356,8 @@ export default function HistoryPage() {
 
   const handleToggleHide = async (deviceId: string) => {
     let newHidden = [...hiddenNodes];
-    if (newHidden.includes(deviceId)) {
-      newHidden = newHidden.filter(id => id !== deviceId);
-    } else {
-      newHidden.push(deviceId);
-    }
+    if (newHidden.includes(deviceId)) newHidden = newHidden.filter(id => id !== deviceId);
+    else newHidden.push(deviceId);
     setHiddenNodes(newHidden);
     await supabase.from('config').upsert({ key: 'hidden_nodes', value: JSON.stringify(newHidden) });
   };
@@ -441,9 +368,7 @@ export default function HistoryPage() {
       if (!error) {
         alert(`✅ ลบข้อมูลทั้งหมดของ ${deviceId} เรียบร้อยแล้ว`);
         setAllData(prev => prev.filter(d => d.deviceId !== deviceId));
-      } else {
-        alert("ลบข้อมูลไม่สำเร็จ: " + error.message);
-      }
+      } else alert("ลบข้อมูลไม่สำเร็จ: " + error.message);
     }
   };
 
@@ -467,12 +392,8 @@ export default function HistoryPage() {
     window.location.reload();
   };
 
-  // ==========================================
-  // Render
-  // ==========================================
   return (
     <>
-      {/* ---------------- Navbar (อัปเกรดให้เหมือนหน้าแรก) ---------------- */}
       <nav className="navbar" style={{ position: 'relative', zIndex: 1006, boxSizing: 'border-box' }}>
           <div className="brand">
               <div className="brand-icon">
@@ -523,7 +444,6 @@ export default function HistoryPage() {
                   <span>{clock}</span>
               </div>
 
-              {/* ปุ่ม Hamburger สำหรับมือถือ */}
               <button 
                   className="mobile-menu-btn"
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -532,7 +452,6 @@ export default function HistoryPage() {
               </button>
           </div>
 
-          {/* เมนูที่กางลงมาบนมือถือ */}
           {isMobileMenuOpen && (
               <div className="mobile-dropdown">
                   <Link href="/" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#475569', fontWeight: '700', padding: '12px', textDecoration: 'none' }}>
@@ -545,7 +464,6 @@ export default function HistoryPage() {
                       <Info size={18} strokeWidth={2.5} /> เกณฑ์คุณภาพอากาศ
                   </Link>
                   
-                  {/* ปุ่ม Admin สำหรับมือถือ */}
                   <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '5px 0' }}></div>
                   {!isAdmin ? (
                     <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#475569', fontWeight: '700', padding: '12px', textDecoration: 'none' }}>
@@ -560,7 +478,6 @@ export default function HistoryPage() {
           )}
       </nav>
 
-      {/* ---------------- Main Content ---------------- */}
       <div className="container">
         <div className="card" style={{ borderRadius: '24px', border: '1px solid #f1f5f9', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.08)', padding: '35px', boxSizing: 'border-box' }}>
 
@@ -666,7 +583,6 @@ export default function HistoryPage() {
             <ProStatCard icon={<Database size={18} color="#3b82f6" />} title="จำนวนข้อมูล" value={isLoadingData ? '...' : stats.count} color="#3b82f6" />
           </div>
 
-          {/* ---------------- Chart ---------------- */}
           <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #f1f5f9', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', boxSizing: 'border-box' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
               <Activity size={18} color="#64748b" />
@@ -682,69 +598,33 @@ export default function HistoryPage() {
             </div>
           </div>
 
-          {/* ---------------- Table ---------------- */}
           <div className="table-responsive" style={{ marginTop: '20px', border: '1px solid #e2e8f0', borderRadius: '16px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
             <table style={{ minWidth: '900px', width: '100%', textAlign: 'left', borderCollapse: 'collapse', backgroundColor: '#ffffff' }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
-                  <th
-                    onClick={() => handleSort('displayNo')}
-                    style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'displayNo' ? '#2563eb' : '#475569', fontWeight: '800', width: '70px', textAlign: 'center', backgroundColor: sortConfig?.key === 'displayNo' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}
-                  >
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>
-                      No. {renderSortIcon('displayNo')}
-                    </div>
+                  <th onClick={() => handleSort('displayNo')} style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'displayNo' ? '#2563eb' : '#475569', fontWeight: '800', width: '70px', textAlign: 'center', backgroundColor: sortConfig?.key === 'displayNo' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>No. {renderSortIcon('displayNo')}</div>
                   </th>
-
-                  <th
-                    onClick={() => handleSort('rawDate')}
-                    style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'rawDate' ? '#2563eb' : '#475569', fontWeight: '800', backgroundColor: sortConfig?.key === 'rawDate' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}
-                  >
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                      เวลาที่บันทึก {renderSortIcon('rawDate')}
-                    </div>
+                  <th onClick={() => handleSort('rawDate')} style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'rawDate' ? '#2563eb' : '#475569', fontWeight: '800', backgroundColor: sortConfig?.key === 'rawDate' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>เวลาที่บันทึก {renderSortIcon('rawDate')}</div>
                   </th>
-
-                  <th
-                    onClick={() => handleSort('pm25')}
-                    style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'pm25' ? '#2563eb' : '#475569', fontWeight: '800', backgroundColor: sortConfig?.key === 'pm25' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}
-                  >
-                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                      PM2.5 & คุณภาพ <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>(µg/m³)</span> {renderSortIcon('pm25')}
-                    </div>
+                  <th onClick={() => handleSort('pm25')} style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'pm25' ? '#2563eb' : '#475569', fontWeight: '800', backgroundColor: sortConfig?.key === 'pm25' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>PM2.5 & คุณภาพ <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>(µg/m³)</span> {renderSortIcon('pm25')}</div>
                   </th>
-
-                  <th
-                    onClick={() => handleSort('temperature')}
-                    style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'temperature' ? '#2563eb' : '#475569', fontWeight: '800', textAlign: 'center', backgroundColor: sortConfig?.key === 'temperature' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
-                      อุณหภูมิ <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>(°C)</span> {renderSortIcon('temperature')}
-                    </div>
+                  <th onClick={() => handleSort('temperature')} style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'temperature' ? '#2563eb' : '#475569', fontWeight: '800', textAlign: 'center', backgroundColor: sortConfig?.key === 'temperature' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>อุณหภูมิ <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>(°C)</span> {renderSortIcon('temperature')}</div>
                   </th>
-
-                  <th
-                    onClick={() => handleSort('humidity')}
-                    style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'humidity' ? '#2563eb' : '#475569', fontWeight: '800', textAlign: 'center', backgroundColor: sortConfig?.key === 'humidity' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
-                      ความชื้น <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>(%)</span> {renderSortIcon('humidity')}
-                    </div>
+                  <th onClick={() => handleSort('humidity')} style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'humidity' ? '#2563eb' : '#475569', fontWeight: '800', textAlign: 'center', backgroundColor: sortConfig?.key === 'humidity' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>ความชื้น <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>(%)</span> {renderSortIcon('humidity')}</div>
                   </th>
-
-                  <th
-                    onClick={() => handleSort('pressure')}
-                    style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'pressure' ? '#2563eb' : '#475569', fontWeight: '800', textAlign: 'center', backgroundColor: sortConfig?.key === 'pressure' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>
-                      ความกดอากาศ <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>(hPa)</span> {renderSortIcon('pressure')}
-                    </div>
+                  <th onClick={() => handleSort('pressure')} style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'pressure' ? '#2563eb' : '#475569', fontWeight: '800', textAlign: 'center', backgroundColor: sortConfig?.key === 'pressure' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}>
+                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>ความกดอากาศ <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>(hPa)</span> {renderSortIcon('pressure')}</div>
                   </th>
-
                   <th style={{ padding: '16px', color: '#475569', fontWeight: '800', backgroundColor: '#f8fafc', whiteSpace: 'nowrap' }}>ตำแหน่งจุดวัด</th>
                   {isAdmin && <th style={{ padding: '16px', color: '#475569', fontWeight: '800', textAlign: 'center', backgroundColor: '#f8fafc', whiteSpace: 'nowrap' }}>จัดการ</th>}
                 </tr>
               </thead>
+              
               <tbody>
                 {isLoadingData ? (
                   <tr>
@@ -771,52 +651,38 @@ export default function HistoryPage() {
 
                     return (
                       <tr key={data.key} style={{ transition: 'background-color 0.2s', borderBottom: '1px solid #f1f5f9' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
-                        <td style={{ padding: '16px', color: '#94a3b8', fontWeight: '700', textAlign: 'center' }}>{data.displayNo}</td>
-
-                        <td style={{ padding: '16px', fontWeight: '700', color: '#64748b', whiteSpace: 'nowrap' }}>{data.timestamp}</td>
-
-                        <td style={{ padding: '16px' }}>
-                          <div style={{
-                            display: 'inline-flex', alignItems: 'center', gap: '10px',
-                            backgroundColor: status.bg, border: `1px solid ${status.border}`, padding: '6px 14px', borderRadius: '12px'
-                          }}>
-                            <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: status.color, boxShadow: `0 0 8px ${status.color}` }}></div>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                              <span style={{ fontSize: '18px', fontWeight: '900', color: '#0f172a', lineHeight: '1' }}>{data.pm25}</span>
-                              {trendIcon}
+                        <td data-label="ลำดับที่ (No.)" style={{ padding: '16px', color: '#94a3b8', fontWeight: '700', textAlign: 'center' }}>{data.displayNo}</td>
+                        <td data-label="เวลาที่บันทึก" style={{ padding: '16px', fontWeight: '700', color: '#64748b', whiteSpace: 'nowrap' }}>{data.timestamp}</td>
+                        <td data-label="PM2.5 & คุณภาพ" style={{ padding: '16px' }}>
+                          <div className="pm-badge-wrapper" style={{ display: 'flex' }}>
+                            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', backgroundColor: status.bg, border: `1px solid ${status.border}`, padding: '6px 14px', borderRadius: '12px' }}>
+                              <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: status.color, boxShadow: `0 0 8px ${status.color}` }}></div>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                <span style={{ fontSize: '18px', fontWeight: '900', color: '#0f172a', lineHeight: '1' }}>{data.pm25}</span>
+                                {trendIcon}
+                              </div>
+                              <div style={{ width: '1px', height: '14px', backgroundColor: status.border }}></div>
+                              <span style={{ fontSize: '13.5px', fontWeight: '800', color: status.color, lineHeight: '1', whiteSpace: 'nowrap' }}>{status.text}</span>
                             </div>
-                            <div style={{ width: '1px', height: '14px', backgroundColor: status.border }}></div>
-                            <span style={{ fontSize: '13.5px', fontWeight: '800', color: status.color, lineHeight: '1', whiteSpace: 'nowrap' }}>{status.text}</span>
                           </div>
                         </td>
-
-                        <td style={{ padding: '16px', color: '#0f172a', fontWeight: '700', fontSize: '15px', textAlign: 'center' }}>{data.temperature != null ? data.temperature.toFixed(0) : '-'}</td>
-                        <td style={{ padding: '16px', color: '#0f172a', fontWeight: '700', fontSize: '15px', textAlign: 'center' }}>{data.humidity != null ? data.humidity.toFixed(0) : '-'}</td>
-                        <td style={{ padding: '16px', color: '#0f172a', fontWeight: '700', fontSize: '15px', textAlign: 'center' }}>{data.pressure > 0 ? data.pressure.toFixed(1) : '-'}</td>
-
-                        <td style={{ padding: '16px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                        <td data-label="อุณหภูมิ (°C)" style={{ padding: '16px', color: '#0f172a', fontWeight: '700', fontSize: '15px', textAlign: 'center' }}>{data.temperature != null ? data.temperature.toFixed(0) : '-'}</td>
+                        <td data-label="ความชื้น (%)" style={{ padding: '16px', color: '#0f172a', fontWeight: '700', fontSize: '15px', textAlign: 'center' }}>{data.humidity != null ? data.humidity.toFixed(0) : '-'}</td>
+                        <td data-label="ความกดอากาศ (hPa)" style={{ padding: '16px', color: '#0f172a', fontWeight: '700', fontSize: '15px', textAlign: 'center' }}>{data.pressure > 0 ? data.pressure.toFixed(1) : '-'}</td>
+                        <td data-label="ตำแหน่งจุดวัด" style={{ padding: '16px' }}>
+                          <div className="pm-badge-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <MapPin size={18} color="#3b82f6" style={{ flexShrink: 0 }} />
-                            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'left' }}>
                               {displayName.split('|').map((str: string, index: number) => (
-                                <span key={index} style={{ fontWeight: '700', color: '#3b82f6', fontSize: '14px', lineHeight: '1.4', whiteSpace: 'nowrap' }}>
-                                  {str.trim()}
-                                </span>
+                                <span key={index} style={{ fontWeight: '700', color: '#3b82f6', fontSize: '14px', lineHeight: '1.4', whiteSpace: 'nowrap' }}>{str.trim()}</span>
                               ))}
-                              {isAdmin && hiddenNodes.includes(data.deviceId) && (
-                                <span style={{ color: '#ef4444', fontSize: '11px', fontWeight: '800', marginTop: '2px' }}>(ถูกซ่อน)</span>
-                              )}
+                              {isAdmin && hiddenNodes.includes(data.deviceId) && <span style={{ color: '#ef4444', fontSize: '11px', fontWeight: '800', marginTop: '2px' }}>(ถูกซ่อน)</span>}
                             </div>
                           </div>
                         </td>
-
                         {isAdmin && (
-                          <td style={{ padding: '16px', textAlign: 'center' }}>
-                            <button
-                              className="btn-delete-row"
-                              onClick={() => handleDeleteRecord(data.key)}
-                              style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer' }}
-                            >
+                          <td data-label="จัดการระบบ" style={{ padding: '16px', textAlign: 'center' }}>
+                            <button className="btn-delete-row" onClick={() => handleDeleteRecord(data.key)} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer' }}>
                               <Trash2 size={14} /> ลบ
                             </button>
                           </td>
@@ -828,30 +694,15 @@ export default function HistoryPage() {
               </tbody>
             </table>
 
-            {/* ---------------- Pagination ---------------- */}
             {sortedData.length > 0 && !isLoadingData && (
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '16px 24px', backgroundColor: '#f8fafc', borderTop: '1px solid #e2e8f0', flexWrap: 'wrap', gap: '10px' }}>
                 <span style={{ fontSize: '13px', fontWeight: '600', color: '#64748b' }}>
                   แสดง {startIndex + 1} ถึง {Math.min(startIndex + rowsPerPage, sortedData.length)} จากทั้งหมด {sortedData.length} รายการ
                 </span>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <button
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    style={{ padding: '6px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: currentPage === 1 ? '#f1f5f9' : 'white', color: currentPage === 1 ? '#94a3b8' : '#334155', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}
-                  >
-                    <ChevronLeft size={18} />
-                  </button>
-                  <span style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a', padding: '0 8px' }}>
-                    หน้า {currentPage} / {totalPages}
-                  </span>
-                  <button
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    style={{ padding: '6px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: currentPage === totalPages ? '#f1f5f9' : 'white', color: currentPage === totalPages ? '#94a3b8' : '#334155', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}
-                  >
-                    <ChevronRight size={18} />
-                  </button>
+                  <button onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} style={{ padding: '6px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: currentPage === 1 ? '#f1f5f9' : 'white', color: currentPage === 1 ? '#94a3b8' : '#334155', cursor: currentPage === 1 ? 'not-allowed' : 'pointer' }}><ChevronLeft size={18} /></button>
+                  <span style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a', padding: '0 8px' }}>หน้า {currentPage} / {totalPages}</span>
+                  <button onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} style={{ padding: '6px', borderRadius: '8px', border: '1px solid #cbd5e1', backgroundColor: currentPage === totalPages ? '#f1f5f9' : 'white', color: currentPage === totalPages ? '#94a3b8' : '#334155', cursor: currentPage === totalPages ? 'not-allowed' : 'pointer' }}><ChevronRight size={18} /></button>
                 </div>
               </div>
             )}
@@ -859,46 +710,24 @@ export default function HistoryPage() {
         </div>
       </div>
 
-      {/* ---------------- Global Styles & Mobile CSS ---------------- */}
       <style dangerouslySetInnerHTML={{
         __html: `
-        @keyframes spin {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        .spin-icon {
-          animation: spin 1s linear infinite;
-        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .spin-icon { animation: spin 1s linear infinite; }
 
-        /* สำหรับหน้าจอมือถือ (ความกว้างไม่เกิน 768px) */
         @media (max-width: 768px) {
             .desktop-only { display: none !important; }
             .mobile-menu-btn { 
-                display: flex !important; 
-                align-items: center; 
-                justify-content: center; 
-                background: #eff6ff; 
-                border: none; 
-                color: #2563eb; 
-                padding: 8px; 
-                border-radius: 12px; 
-                cursor: pointer; 
-                transition: 0.2s;
+                display: flex !important; align-items: center; justify-content: center; 
+                background: #eff6ff; border: none; color: #2563eb; padding: 8px; 
+                border-radius: 12px; cursor: pointer; transition: 0.2s;
             }
             .mobile-menu-btn:active { transform: scale(0.95); background: #dbeafe; }
             
-            /* Navbar ย่อส่วนและดึงให้ชื่อเว็บอยู่ครบ */
             .navbar { padding: 10px 12px !important; height: 65px !important; }
             .nav-right { gap: 6px !important; }
             .brand { gap: 8px !important; }
-            
-            /* บังคับแสดงชื่อเว็บ AQI Monitor KSU บนมือถือ */
-            .brand-text { 
-                font-size: 16px !important; 
-                white-space: nowrap !important; 
-                display: inline-block !important; 
-            }
-
+            .brand-text { font-size: 16px !important; white-space: nowrap !important; display: inline-block !important; }
             .brand-icon { padding: 5px !important; border-radius: 8px !important; }
             .brand-icon svg { width: 16px !important; height: 16px !important; }
             
@@ -910,38 +739,78 @@ export default function HistoryPage() {
                 box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
             }
 
-            /* จัดการส่วน Filter และปุ่มต่างๆ ให้เป็นระเบียบขึ้นบนจอมือถือ */
             .container { padding: 10px !important; }
             .card { padding: 20px 15px !important; }
-            .header-row {
-                flex-direction: column !important;
-                align-items: stretch !important;
-                gap: 15px !important;
+            .header-row { flex-direction: column !important; align-items: stretch !important; gap: 15px !important; }
+            .filter-group { justify-content: space-between !important; padding: 10px 12px !important; }
+            .action-buttons { width: 100%; }
+            .btn-export, .btn-config, .btn-clear { flex: 1; justify-content: center; padding: 10px !important; }
+            
+            .stats-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
+            .stat-card { padding: 15px !important; gap: 8px !important; }
+            .stat-card > div:last-child { font-size: 22px !important; }
+
+            .table-responsive {
+                border: none !important;
+                background: transparent !important;
+                overflow-x: hidden !important; 
             }
-            .filter-group {
-                justify-content: space-between !important;
-                padding: 10px 12px !important;
-            }
-            .action-buttons {
+            table, thead, tbody, th, td, tr {
+                display: block;
                 width: 100%;
             }
-            .btn-export, .btn-config, .btn-clear {
-                flex: 1;
-                justify-content: center;
-                padding: 10px !important;
+            thead tr {
+                display: none;
             }
+            tr {
+                background-color: #ffffff !important;
+                border: 1px solid #e2e8f0 !important;
+                border-radius: 20px !important;
+                margin-bottom: 16px !important;
+                padding: 10px 16px !important;
+                box-shadow: 0 4px 15px -5px rgba(0,0,0,0.05) !important;
+            }
+            tr:last-child { margin-bottom: 0 !important; }
             
-            /* จัดกล่องสถิติให้เป็น 2 คอลัมน์ ไม่ให้เรียงยาวเป็นแถวเดียว */
-            .stats-grid {
-                grid-template-columns: 1fr 1fr !important;
-                gap: 10px !important;
+            td {
+                border: none !important;
+                border-bottom: 1px dashed #f1f5f9 !important;
+                position: relative !important;
+                padding: 12px 0 12px 42% !important; 
+                text-align: right !important;
+                min-height: 24px;
+                display: flex !important;
+                justify-content: flex-end !important;
+                align-items: center !important;
             }
-            .stat-card {
-                padding: 15px !important;
-                gap: 8px !important;
+            td:last-child {
+                border-bottom: none !important;
+                padding-bottom: 4px !important;
             }
-            .stat-card > div:last-child {
-                font-size: 22px !important; /* ลดขนาดตัวเลขสถิติลงนิดนึง */
+            td::before {
+                content: attr(data-label);
+                position: absolute;
+                left: 0;
+                top: 50%;
+                transform: translateY(-50%);
+                width: 40%;
+                text-align: left;
+                font-weight: 800;
+                color: #94a3b8;
+                font-size: 13px;
+                line-height: 1.3;
+            }
+            .pm-badge-wrapper {
+                justify-content: flex-end !important;
+                width: 100%;
+            }
+            td[colspan] {
+                padding: 40px 20px !important;
+                text-align: center !important;
+                justify-content: center !important;
+            }
+            td[colspan]::before {
+                display: none !important;
             }
         }
 

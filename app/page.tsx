@@ -12,47 +12,48 @@ import {
     Layers, CheckCircle2, ChevronDown, Menu 
 } from 'lucide-react'; 
 
+// 🌟 อัปเดตเกณฑ์ PM2.5 (แบบไม่มีทศนิยม)
 const getStatusColor = (pm25: number) => {
-  if (pm25 <= 25) return '#0ea5e9'; 
-  if (pm25 <= 50) return '#10b981'; 
-  if (pm25 <= 100) return '#f59e0b'; 
-  if (pm25 <= 200) return '#f97316'; 
+  if (pm25 <= 15) return '#0ea5e9'; 
+  if (pm25 <= 25) return '#10b981'; 
+  if (pm25 <= 37) return '#f59e0b'; 
+  if (pm25 <= 75) return '#f97316'; 
   return '#ef4444'; 
 };
 
 const getStatusText = (pm25: number) => {
-  if (pm25 <= 25) return 'ดีมาก';
-  if (pm25 <= 50) return 'ดี';
-  if (pm25 <= 100) return 'ปานกลาง';
-  if (pm25 <= 200) return 'เริ่มมีผล';
+  if (pm25 <= 15) return 'ดีมาก';
+  if (pm25 <= 25) return 'ดี';
+  if (pm25 <= 37) return 'ปานกลาง';
+  if (pm25 <= 75) return 'เริ่มมีผล';
   return 'มีผลกระทบ';
 };
 
 const getHealthAdvice = (pm25: number) => {
-  if (pm25 <= 25) return "อากาศดีมาก เหมาะสำหรับกิจกรรมกลางแจ้ง";
-  if (pm25 <= 50) return "อากาศดี ทำกิจกรรมกลางแจ้งได้ปกติ";
-  if (pm25 <= 100) return "เริ่มมีผลกระทบ ควรลดกิจกรรมกลางแจ้ง";
-  if (pm25 <= 200) return "ควรสวมหน้ากาก N95 ลดกิจกรรมกลางแจ้ง";
-  return "อันตราย! งดกิจกรรมกลางแจ้ง สวมหน้ากาก N95";
+  if (pm25 <= 15) return "สามารถทำกิจกรรมกลางแจ้งได้ตามปกติ";
+  if (pm25 <= 25) return "ทั่วไปทำกิจกรรมได้ปกติ / กลุ่มเสี่ยงเลี่ยงกิจกรรมที่ใช้แรงมาก";
+  if (pm25 <= 37) return "ลดระยะเวลากิจกรรมที่ใช้แรงมาก สวมหน้ากากป้องกันฝุ่น";
+  if (pm25 <= 75) return "หลีกเลี่ยงกิจกรรมกลางแจ้ง สวมหน้ากากป้องกันฝุ่นทุกครั้ง";
+  return "อันตราย! งดกิจกรรมนอกอาคาร อยู่ในห้องปลอดฝุ่น";
 };
 
 const getAiBoxTheme = (pm25: number) => {
-  if (pm25 <= 25) return { 
+  if (pm25 <= 15) return { 
     bg: 'linear-gradient(145deg, #f0f9ff 0%, #e0f2fe 100%)', 
     border: '#bae6fd', iconBg: '#0ea5e9', iconShadow: 'rgba(14, 165, 233, 0.3)', 
     titleColor: '#0369a1', strongColor: '#0284c7'
   };
-  if (pm25 <= 50) return { 
+  if (pm25 <= 25) return { 
     bg: 'linear-gradient(145deg, #f0fdf4 0%, #dcfce7 100%)', 
     border: '#bbf7d0', iconBg: '#10b981', iconShadow: 'rgba(16, 185, 129, 0.3)', 
     titleColor: '#047857', strongColor: '#059669'
   };
-  if (pm25 <= 100) return { 
+  if (pm25 <= 37) return { 
     bg: 'linear-gradient(145deg, #fffbeb 0%, #fef3c7 100%)', 
     border: '#fde68a', iconBg: '#f59e0b', iconShadow: 'rgba(245, 158, 11, 0.3)', 
     titleColor: '#b45309', strongColor: '#d97706'
   };
-  if (pm25 <= 200) return { 
+  if (pm25 <= 75) return { 
     bg: 'linear-gradient(145deg, #fff7ed 0%, #ffedd5 100%)', 
     border: '#fed7aa', iconBg: '#f97316', iconShadow: 'rgba(249, 115, 22, 0.3)', 
     titleColor: '#c2410c', strongColor: '#ea580c'
@@ -601,7 +602,7 @@ export default function Home() {
             </div>
 
             <div className="pm-container" style={{ backgroundColor: '#f8fafc', borderRadius: '20px', padding: '24px 20px', border: '1px solid #e2e8f0', display: 'flex', flexDirection: 'column', alignItems: 'center', boxSizing: 'border-box' }}>
-                <div style={{ fontSize: '13px', color: '#64748b', fontWeight: '800', marginBottom: '15px' }}>ดัชนีคุณภาพอากาศ (PM2.5)</div>
+                <div style={{ fontSize: '13px', color: '#64748b', fontWeight: '800', marginBottom: '15px' }}>ปริมาณฝุ่น PM2.5</div>
                 
                 <div className="pm-circle" style={{ 
                     width: '130px', height: '130px', 
@@ -665,6 +666,7 @@ export default function Home() {
 
       <div id="map"></div>
 
+      {/* 🌟 ป้ายบอกสีแบบไม่มีทศนิยม (จำนวนเต็ม) */}
       <div className="map-legend" style={{
           position: 'absolute', bottom: '30px', left: '20px', zIndex: 1000,
           backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
@@ -673,10 +675,10 @@ export default function Home() {
           boxShadow: '0 10px 40px -10px rgba(0,0,0,0.15)',
           boxSizing: 'border-box'
       }}>
-          <LegendItem color="#0ea5e9" text="ดีมาก (0-15)" />
-          <LegendItem color="#10b981" text="ดี (16-25)" />
-          <LegendItem color="#f59e0b" text="ปานกลาง (26-37)" />
-          <LegendItem color="#f97316" text="เริ่มมีผล (38-75)" />
+          <LegendItem color="#0ea5e9" text="ดีมาก (0 - 15)" />
+          <LegendItem color="#10b981" text="ดี (16 - 25)" />
+          <LegendItem color="#f59e0b" text="ปานกลาง (26 - 37)" />
+          <LegendItem color="#f97316" text="เริ่มมีผล (38 - 75)" />
           <LegendItem color="#ef4444" text="มีผลกระทบ (76+)" />
       </div>
 
