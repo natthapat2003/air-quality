@@ -673,11 +673,11 @@ export default function Home() {
           boxShadow: '0 10px 40px -10px rgba(0,0,0,0.15)',
           boxSizing: 'border-box'
       }}>
-          <LegendItem color="#0ea5e9" text="ดีมาก (0-25)" />
-          <LegendItem color="#10b981" text="ดี (26-50)" />
-          <LegendItem color="#f59e0b" text="ปานกลาง (51-100)" />
-          <LegendItem color="#f97316" text="เริ่มมีผล (101-200)" />
-          <LegendItem color="#ef4444" text="มีผลกระทบ (201+)" />
+          <LegendItem color="#0ea5e9" text="ดีมาก (0-15)" />
+          <LegendItem color="#10b981" text="ดี (16-25)" />
+          <LegendItem color="#f59e0b" text="ปานกลาง (26-37)" />
+          <LegendItem color="#f97316" text="เริ่มมีผล (38-75)" />
+          <LegendItem color="#ef4444" text="มีผลกระทบ (76+)" />
       </div>
 
       <style dangerouslySetInnerHTML={{__html: `
