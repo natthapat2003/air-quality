@@ -7,9 +7,8 @@ export async function POST(req: Request) {
     
     const apiKey = "AIzaSyBE0slETSi38afR8eAepfBNAWGT5ywRGxE";
 
-    //const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
-    //const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+    
     const prompt = `
 คุณคือผู้เชี่ยวชาญด้านอุตุนิยมวิทยาและสุขภาพ 
 จงวิเคราะห์สภาพอากาศและคาดการณ์แนวโน้มจากค่าเซนเซอร์ที่วัดได้จริง ณ ${body.siteName} ต่อไปนี้:
@@ -18,13 +17,12 @@ export async function POST(req: Request) {
 - อุณหภูมิ: ${body.temp} °C
 - ความชื้นสัมพัทธ์: ${body.hum} %
 - ความกดอากาศ: ${body.pressure} hPa
+- โอกาสเกิดฝน: ${body.rainChance} %
 
 ข้อกำหนดในการวิเคราะห์และตอบคำถาม (จัดรูปแบบด้วย Markdown ให้สวยงามอ่านง่าย):
-**สรุปสภาพอากาศปัจจุบัน:** อธิบายภาพรวมสั้นๆ ว่าอากาศตอนนี้เป็นอย่างไร
-**พยากรณ์โอกาสเกิดฝน:** ให้วิเคราะห์จาก "ความชื้นสัมพัทธ์" และ "ความกดอากาศ" 
-   - หากความชื้นสูง (เกิน 75-80%) และความกดอากาศต่ำ ให้แจ้งเตือนว่า "มีแนวโน้มสูงที่ฝนจะตกหรือมีเมฆครึ้ม" 
-   - หากความชื้นต่ำและความกดอากาศสูง ให้บอกว่า "อากาศโปร่งใส โอกาสเกิดฝนน้อย"
-**คำแนะนำด้านสุขภาพและการใช้ชีวิต:** ให้คำแนะนำที่สอดคล้องกับค่าฝุ่น PM2.5 และแนวโน้มฝนตก (เช่น ฝุ่นสูงให้ใส่หน้ากาก, ฝนจะตกให้พกร่ม)
+**สรุปสภาพอากาศปัจจุบัน:** อธิบายภาพรวมสั้นๆ ว่าอากาศตอนนี้เป็นอย่างไร โดยดูจากอุณหภูมิและความชื้นสัมพัทธ์
+**พยากรณ์โอกาสเกิดฝน:** ให้อธิบายความน่าจะเป็นของฝนโดยอ้างอิงจากตัวเลข "โอกาสเกิดฝน" เป็นหลัก หากโอกาสฝนน้อยแต่ความชื้นสูง ให้แนะนำว่าเป็นสภาวะอากาศปิดหรืออาจมีหมอก/ฝุ่นสะสม
+**คำแนะนำด้านสุขภาพและการใช้ชีวิต:** ให้คำแนะนำที่สอดคล้องกับค่าฝุ่น PM2.5 และโอกาสเกิดฝนอย่างสมเหตุสมผล
 
 ขอให้ใช้ภาษาที่เป็นกันเอง สุภาพ กระชับ และอ่านเข้าใจง่าย
 `;
