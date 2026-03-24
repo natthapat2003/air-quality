@@ -257,7 +257,6 @@ export default function HistoryPage() {
   };
   const stats = getStats();
 
-  // 🌟 อัปเดตเป็นจำนวนเต็ม (ไม่มีทศนิยม)
   const getAQIStatus = (pm25: number) => {
     if (pm25 <= 15) return { text: "ดีมาก", color: '#0ea5e9', bg: '#f0f9ff', border: '#bae6fd' };
     if (pm25 <= 25) return { text: "ดี", color: '#10b981', bg: '#f0fdf4', border: '#a7f3d0' };
@@ -291,14 +290,15 @@ export default function HistoryPage() {
     return sortConfig.direction === 'asc' ? <ArrowUp size={16} color="#2563eb" strokeWidth={3} /> : <ArrowDown size={16} color="#2563eb" strokeWidth={3} />;
   };
 
-  const chartDataReversed = [...filteredData].reverse();
+  const MAX_CHART_ITEMS = 100;
+  const chartDataReversed = [...filteredData].slice(0, MAX_CHART_ITEMS).reverse();
+  
   const chartData = {
     labels: chartDataReversed.map(d => d.timestamp ? d.timestamp.split(' ')[1] : '-'),
     datasets: [
       {
         label: 'ค่าฝุ่น PM2.5 (µg/m³)',
         data: chartDataReversed.map(d => d.pm25),
-        // 🌟 อัปเดตสีของกราฟแท่ง (ไม่มีทศนิยม)
         backgroundColor: chartDataReversed.map(d => {
           const v = d.pm25 || 0;
           if (v <= 15) return 'rgba(14, 165, 233, 0.85)';
@@ -498,15 +498,16 @@ export default function HistoryPage() {
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <MapPin size={16} color="#3b82f6" />
+                {/* 🌟 จุดที่แก้ไข: ปลดล็อคความกว้าง ปล่อยให้มันยืดแสดงชื่อเต็มแบบไม่มีตัด */}
                 <select
                   value={selectedNodeFilter}
                   onChange={(e) => setSelectedNodeFilter(e.target.value)}
-                  style={{ border: 'none', background: 'transparent', fontWeight: '700', color: '#0f172a', outline: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px', maxWidth: '150px' }}
+                  style={{ border: 'none', background: 'transparent', fontWeight: '700', color: '#0f172a', outline: 'none', cursor: 'pointer', fontFamily: 'inherit', fontSize: '14px' }}
                 >
                   <option value="all">ทุกจุดตรวจวัด</option>
                   {uniqueIds.map(id => (
                     <option key={id as string} value={id as string}>
-                      {nodeNames[id as string] ? nodeNames[id as string].split('|')[0].trim() : id as string}
+                      {nodeNames[id as string] ? nodeNames[id as string] : id as string}
                     </option>
                   ))}
                 </select>
@@ -588,40 +589,50 @@ export default function HistoryPage() {
               <Activity size={18} color="#64748b" />
               <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#475569', margin: 0, letterSpacing: '0.2px' }}>
                 กราฟแท่งแสดงแนวโน้มฝุ่น PM2.5
-                <span style={{ fontWeight: '600', color: '#94a3b8', marginLeft: '6px' }}>({filteredData.length} รายการ)</span>
+                <span style={{ fontWeight: '600', color: '#94a3b8', marginLeft: '6px' }}>
+                  ({filteredData.length > MAX_CHART_ITEMS ? `แสดง ${MAX_CHART_ITEMS} รายการล่าสุดจากทั้งหมด ${filteredData.length}` : `${filteredData.length} รายการ`})
+                </span>
               </h3>
             </div>
             <div style={{ overflowX: 'auto', paddingBottom: '15px', WebkitOverflowScrolling: 'touch' }}>
-              <div style={{ height: '350px', minWidth: `${Math.max(600, filteredData.length * 15)}px` }}>
+              <div style={{ height: '350px', minWidth: `${Math.max(600, chartDataReversed.length * 15)}px` }}>
                 <Bar data={chartData} options={chartOptions as any} />
               </div>
             </div>
           </div>
 
-          <div className="table-responsive" style={{ marginTop: '20px', border: '1px solid #e2e8f0', borderRadius: '16px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-            <table style={{ minWidth: '900px', width: '100%', textAlign: 'left', borderCollapse: 'collapse', backgroundColor: '#ffffff' }}>
+          <div className="table-responsive" style={{ 
+              marginTop: '20px', 
+              border: '1px solid #e2e8f0', 
+              borderRadius: '16px', 
+              overflowX: 'auto', 
+              WebkitOverflowScrolling: 'touch', 
+              width: '100%', 
+              display: 'block' 
+          }}>
+            <table style={{ minWidth: isAdmin ? '1350px' : '1100px', width: '100%', textAlign: 'left', borderCollapse: 'collapse', backgroundColor: '#ffffff' }}>
               <thead>
                 <tr style={{ borderBottom: '2px solid #e2e8f0' }}>
-                  <th onClick={() => handleSort('displayNo')} style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'displayNo' ? '#2563eb' : '#475569', fontWeight: '800', width: '70px', textAlign: 'center', backgroundColor: sortConfig?.key === 'displayNo' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}>
+                  <th onClick={() => handleSort('displayNo')} style={{ cursor: 'pointer', padding: '12px 16px', color: sortConfig?.key === 'displayNo' ? '#2563eb' : '#475569', fontWeight: '800', width: '70px', textAlign: 'center', backgroundColor: sortConfig?.key === 'displayNo' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}>
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', justifyContent: 'center' }}>No. {renderSortIcon('displayNo')}</div>
                   </th>
-                  <th onClick={() => handleSort('rawDate')} style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'rawDate' ? '#2563eb' : '#475569', fontWeight: '800', backgroundColor: sortConfig?.key === 'rawDate' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}>
+                  <th onClick={() => handleSort('rawDate')} style={{ cursor: 'pointer', padding: '12px 16px', color: sortConfig?.key === 'rawDate' ? '#2563eb' : '#475569', fontWeight: '800', backgroundColor: sortConfig?.key === 'rawDate' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}>
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>เวลาที่บันทึก {renderSortIcon('rawDate')}</div>
                   </th>
-                  <th onClick={() => handleSort('pm25')} style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'pm25' ? '#2563eb' : '#475569', fontWeight: '800', backgroundColor: sortConfig?.key === 'pm25' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}>
+                  <th onClick={() => handleSort('pm25')} style={{ cursor: 'pointer', padding: '12px 16px', color: sortConfig?.key === 'pm25' ? '#2563eb' : '#475569', fontWeight: '800', backgroundColor: sortConfig?.key === 'pm25' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}>
                     <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>PM2.5 & คุณภาพ <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>(µg/m³)</span> {renderSortIcon('pm25')}</div>
                   </th>
-                  <th onClick={() => handleSort('temperature')} style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'temperature' ? '#2563eb' : '#475569', fontWeight: '800', textAlign: 'center', backgroundColor: sortConfig?.key === 'temperature' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}>
+                  <th onClick={() => handleSort('temperature')} style={{ cursor: 'pointer', padding: '12px 16px', color: sortConfig?.key === 'temperature' ? '#2563eb' : '#475569', fontWeight: '800', textAlign: 'center', backgroundColor: sortConfig?.key === 'temperature' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}>
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>อุณหภูมิ <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>(°C)</span> {renderSortIcon('temperature')}</div>
                   </th>
-                  <th onClick={() => handleSort('humidity')} style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'humidity' ? '#2563eb' : '#475569', fontWeight: '800', textAlign: 'center', backgroundColor: sortConfig?.key === 'humidity' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}>
+                  <th onClick={() => handleSort('humidity')} style={{ cursor: 'pointer', padding: '12px 16px', color: sortConfig?.key === 'humidity' ? '#2563eb' : '#475569', fontWeight: '800', textAlign: 'center', backgroundColor: sortConfig?.key === 'humidity' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}>
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>ความชื้น <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>(%)</span> {renderSortIcon('humidity')}</div>
                   </th>
-                  <th onClick={() => handleSort('pressure')} style={{ cursor: 'pointer', padding: '16px', color: sortConfig?.key === 'pressure' ? '#2563eb' : '#475569', fontWeight: '800', textAlign: 'center', backgroundColor: sortConfig?.key === 'pressure' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}>
+                  <th onClick={() => handleSort('pressure')} style={{ cursor: 'pointer', padding: '12px 16px', color: sortConfig?.key === 'pressure' ? '#2563eb' : '#475569', fontWeight: '800', textAlign: 'center', backgroundColor: sortConfig?.key === 'pressure' ? '#eff6ff' : '#f8fafc', transition: '0.2s', whiteSpace: 'nowrap' }}>
                     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px' }}>ความกดอากาศ <span style={{ fontSize: '11px', color: '#94a3b8', fontWeight: '600' }}>(hPa)</span> {renderSortIcon('pressure')}</div>
                   </th>
-                  <th style={{ padding: '16px', color: '#475569', fontWeight: '800', backgroundColor: '#f8fafc', whiteSpace: 'nowrap' }}>ตำแหน่งจุดวัด</th>
-                  {isAdmin && <th style={{ padding: '16px', color: '#475569', fontWeight: '800', textAlign: 'center', backgroundColor: '#f8fafc', whiteSpace: 'nowrap' }}>จัดการ</th>}
+                  <th style={{ padding: '12px 16px', color: '#475569', fontWeight: '800', backgroundColor: '#f8fafc', whiteSpace: 'nowrap' }}>ตำแหน่งจุดวัด</th>
+                  {isAdmin && <th style={{ padding: '12px 16px', color: '#475569', fontWeight: '800', textAlign: 'center', backgroundColor: '#f8fafc', whiteSpace: 'nowrap', width: '120px' }}>จัดการ</th>}
                 </tr>
               </thead>
               
@@ -651,9 +662,9 @@ export default function HistoryPage() {
 
                     return (
                       <tr key={data.key} style={{ transition: 'background-color 0.2s', borderBottom: '1px solid #f1f5f9' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
-                        <td data-label="ลำดับที่ (No.)" style={{ padding: '16px', color: '#94a3b8', fontWeight: '700', textAlign: 'center' }}>{data.displayNo}</td>
-                        <td data-label="เวลาที่บันทึก" style={{ padding: '16px', fontWeight: '700', color: '#64748b', whiteSpace: 'nowrap' }}>{data.timestamp}</td>
-                        <td data-label="PM2.5 & คุณภาพ" style={{ padding: '16px' }}>
+                        <td data-label="ลำดับที่ (No.)" style={{ padding: '12px 16px', color: '#94a3b8', fontWeight: '700', textAlign: 'center', whiteSpace: 'nowrap' }}>{data.displayNo}</td>
+                        <td data-label="เวลาที่บันทึก" style={{ padding: '12px 16px', fontWeight: '700', color: '#64748b', whiteSpace: 'nowrap' }}>{data.timestamp}</td>
+                        <td data-label="PM2.5 & คุณภาพ" style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
                           <div className="pm-badge-wrapper" style={{ display: 'flex' }}>
                             <div style={{ display: 'inline-flex', alignItems: 'center', gap: '10px', backgroundColor: status.bg, border: `1px solid ${status.border}`, padding: '6px 14px', borderRadius: '12px' }}>
                               <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: status.color, boxShadow: `0 0 8px ${status.color}` }}></div>
@@ -666,23 +677,25 @@ export default function HistoryPage() {
                             </div>
                           </div>
                         </td>
-                        <td data-label="อุณหภูมิ (°C)" style={{ padding: '16px', color: '#0f172a', fontWeight: '700', fontSize: '15px', textAlign: 'center' }}>{data.temperature != null ? data.temperature.toFixed(0) : '-'}</td>
-                        <td data-label="ความชื้น (%)" style={{ padding: '16px', color: '#0f172a', fontWeight: '700', fontSize: '15px', textAlign: 'center' }}>{data.humidity != null ? data.humidity.toFixed(0) : '-'}</td>
-                        <td data-label="ความกดอากาศ (hPa)" style={{ padding: '16px', color: '#0f172a', fontWeight: '700', fontSize: '15px', textAlign: 'center' }}>{data.pressure > 0 ? data.pressure.toFixed(1) : '-'}</td>
-                        <td data-label="ตำแหน่งจุดวัด" style={{ padding: '16px' }}>
+                        <td data-label="อุณหภูมิ (°C)" style={{ padding: '12px 16px', color: '#0f172a', fontWeight: '700', fontSize: '15px', textAlign: 'center', whiteSpace: 'nowrap' }}>{data.temperature != null ? data.temperature.toFixed(0) : '-'}</td>
+                        <td data-label="ความชื้น (%)" style={{ padding: '12px 16px', color: '#0f172a', fontWeight: '700', fontSize: '15px', textAlign: 'center', whiteSpace: 'nowrap' }}>{data.humidity != null ? data.humidity.toFixed(0) : '-'}</td>
+                        <td data-label="ความกดอากาศ (hPa)" style={{ padding: '12px 16px', color: '#0f172a', fontWeight: '700', fontSize: '15px', textAlign: 'center', whiteSpace: 'nowrap' }}>{data.pressure > 0 ? data.pressure.toFixed(1) : '-'}</td>
+                        
+                        <td data-label="ตำแหน่งจุดวัด" style={{ padding: '12px 16px', whiteSpace: 'nowrap' }}>
                           <div className="pm-badge-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
                             <MapPin size={18} color="#3b82f6" style={{ flexShrink: 0 }} />
                             <div style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', textAlign: 'left' }}>
                               {displayName.split('|').map((str: string, index: number) => (
-                                <span key={index} style={{ fontWeight: '700', color: '#3b82f6', fontSize: '14px', lineHeight: '1.4', whiteSpace: 'nowrap' }}>{str.trim()}</span>
+                                <span key={index} style={{ fontWeight: '700', color: '#3b82f6', fontSize: '14px', lineHeight: '1.5', whiteSpace: 'nowrap' }}>{str.trim()}</span>
                               ))}
-                              {isAdmin && hiddenNodes.includes(data.deviceId) && <span style={{ color: '#ef4444', fontSize: '11px', fontWeight: '800', marginTop: '2px' }}>(ถูกซ่อน)</span>}
+                              {isAdmin && hiddenNodes.includes(data.deviceId) && <span style={{ color: '#ef4444', fontSize: '11px', fontWeight: '800', marginTop: '2px', whiteSpace: 'nowrap' }}>(ถูกซ่อน)</span>}
                             </div>
                           </div>
                         </td>
+
                         {isAdmin && (
-                          <td data-label="จัดการระบบ" style={{ padding: '16px', textAlign: 'center' }}>
-                            <button className="btn-delete-row" onClick={() => handleDeleteRecord(data.key)} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer' }}>
+                          <td data-label="จัดการระบบ" style={{ padding: '12px 16px', textAlign: 'center', whiteSpace: 'nowrap', width: '120px' }}>
+                            <button className="btn-delete-row" onClick={() => handleDeleteRecord(data.key)} style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', padding: '6px 12px', borderRadius: '8px', cursor: 'pointer', backgroundColor: '#fee2e2', color: '#ef4444', border: '1px solid #fecaca', whiteSpace: 'nowrap' }}>
                               <Trash2 size={14} /> ลบ
                             </button>
                           </td>
@@ -710,10 +723,99 @@ export default function HistoryPage() {
         </div>
       </div>
 
+      {isSettingsModalOpen && (
+        <div className="modal-overlay" style={{
+          position: 'fixed', top: 0, left: 0, right: 0, bottom: 0,
+          backgroundColor: 'rgba(15, 23, 42, 0.7)', backdropFilter: 'blur(4px)',
+          zIndex: 2000, display: 'flex', alignItems: 'center', justifyContent: 'center',
+          padding: '20px'
+        }}>
+          <div className="modal-content" style={{
+            backgroundColor: '#ffffff', borderRadius: '24px', width: '100%', maxWidth: '600px',
+            maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)'
+          }}>
+            <div style={{ padding: '24px', borderBottom: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'sticky', top: 0, backgroundColor: '#ffffff', zIndex: 10, borderRadius: '24px 24px 0 0' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <div style={{ backgroundColor: '#f1f5f9', padding: '10px', borderRadius: '12px', color: '#475569' }}>
+                  <Settings size={24} strokeWidth={2.5} />
+                </div>
+                <h2 style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', margin: 0 }}>จัดการระบบเซนเซอร์</h2>
+              </div>
+              <button onClick={() => setIsSettingsModalOpen(false)} style={{ border: 'none', background: '#f8fafc', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#64748b', cursor: 'pointer', transition: '0.2s' }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#fee2e2'} onMouseOut={e => e.currentTarget.style.backgroundColor = '#f8fafc'}>
+                <X size={20} strokeWidth={2.5} />
+              </button>
+            </div>
+
+            <div style={{ padding: '24px' }}>
+              {uniqueIds.length === 0 ? (
+                <div style={{ textAlign: 'center', color: '#94a3b8', padding: '40px 0' }}>ไม่พบอุปกรณ์เซนเซอร์ในระบบ</div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                  {uniqueIds.map((id: string) => {
+                    const currentName = nodeNames[id] || '';
+                    const isHidden = hiddenNodes.includes(id);
+
+                    return (
+                      <div key={id} style={{ border: '1px solid #e2e8f0', borderRadius: '16px', padding: '20px', backgroundColor: isHidden ? '#f8fafc' : '#ffffff', transition: '0.3s' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
+                          <div style={{ flex: '1 1 250px' }}>
+                            <div style={{ fontSize: '13px', fontWeight: '800', color: '#64748b', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <Server size={14} /> Device ID: <span style={{ color: '#3b82f6' }}>{id}</span>
+                              {isHidden && <span style={{ backgroundColor: '#fee2e2', color: '#ef4444', padding: '2px 8px', borderRadius: '8px', fontSize: '11px' }}>ซ่อนอยู่</span>}
+                            </div>
+                            <div style={{ display: 'flex', gap: '8px' }}>
+                              <input 
+                                id={`input-node-${id}`} 
+                                defaultValue={currentName} 
+                                placeholder="ตั้งชื่อสถานที่..." 
+                                style={{ flex: 1, padding: '10px 14px', borderRadius: '10px', border: '1px solid #cbd5e1', outline: 'none', fontSize: '14px', fontFamily: 'inherit', fontWeight: '600', color: '#0f172a' }} 
+                              />
+                              <button onClick={() => handleSaveNodeName(id)} style={{ backgroundColor: '#2563eb', color: '#ffffff', border: 'none', borderRadius: '10px', padding: '0 16px', fontWeight: '700', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', transition: '0.2s' }} onMouseOver={e => e.currentTarget.style.backgroundColor = '#1d4ed8'} onMouseOut={e => e.currentTarget.style.backgroundColor = '#2563eb'}>
+                                <Save size={16} /> บันทึก
+                              </button>
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '8px', flex: '1 1 100%', justifyContent: 'flex-end', borderTop: '1px dashed #e2e8f0', paddingTop: '16px', marginTop: '4px' }}>
+                            <button onClick={() => handleToggleHide(id)} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '10px', border: 'none', fontWeight: '700', cursor: 'pointer', backgroundColor: isHidden ? '#dcfce7' : '#f1f5f9', color: isHidden ? '#16a34a' : '#475569', transition: '0.2s' }}>
+                              {isHidden ? <Eye size={16} /> : <EyeOff size={16} />}
+                              {isHidden ? 'แสดงบนแผนที่' : 'ซ่อนจากแผนที่'}
+                            </button>
+                            <button onClick={() => handleWipeNodeData(id)} style={{ display: 'flex', alignItems: 'center', gap: '6px', padding: '8px 16px', borderRadius: '10px', border: 'none', fontWeight: '700', cursor: 'pointer', backgroundColor: '#fee2e2', color: '#ef4444', transition: '0.2s' }}>
+                              <Trash2 size={16} /> ล้างข้อมูลประวัติ
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
       <style dangerouslySetInnerHTML={{
         __html: `
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         .spin-icon { animation: spin 1s linear infinite; }
+
+        .table-responsive::-webkit-scrollbar {
+            height: 10px;
+        }
+        .table-responsive::-webkit-scrollbar-track {
+            background: #f8fafc;
+            border-radius: 0 0 16px 16px;
+        }
+        .table-responsive::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 8px;
+            border: 2px solid #f8fafc;
+        }
+        .table-responsive::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
 
         @media (max-width: 768px) {
             .desktop-only { display: none !important; }
@@ -782,6 +884,10 @@ export default function HistoryPage() {
                 display: flex !important;
                 justify-content: flex-end !important;
                 align-items: center !important;
+            }
+            td, td span {
+                white-space: normal !important;
+                word-break: break-word !important;
             }
             td:last-child {
                 border-bottom: none !important;
