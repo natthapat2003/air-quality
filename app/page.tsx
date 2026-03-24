@@ -424,7 +424,7 @@ export default function Home() {
                           position: 'absolute', top: '100%', right: 0, marginTop: '12px',
                           backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)',
                           border: '1px solid rgba(255, 255, 255, 0.8)', borderRadius: '16px',
-                          padding: '16px', width: '280px', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.15)', zIndex: 1002,
+                          padding: '16px', width: '320px', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.15)', zIndex: 1002,
                           boxSizing: 'border-box'
                       }}>
                           <div style={{ fontSize: '12px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -437,15 +437,33 @@ export default function Home() {
                                   const dName = nodeNames[id] || id;
 
                                   return (
+                                      // 🌟 จุดที่ปรับแก้: เพิ่ม flex: 1 และปรับโครงสร้าง Padding/Line height ให้สมส่วน
                                       <div key={id} style={{ 
-                                          display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', 
+                                          display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', 
                                           backgroundColor: isNodeOnline ? '#f0fdf4' : '#fef2f2', borderRadius: '12px', 
-                                          border: `1px solid ${isNodeOnline ? '#bbf7d0' : '#fecaca'}` 
+                                          border: `1px solid ${isNodeOnline ? '#bbf7d0' : '#fecaca'}`,
+                                          gap: '12px'
                                       }}>
-                                          <span style={{ fontSize: '13px', fontWeight: '700', color: '#334155', maxWidth: '160px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                              {dName.split('|')[0].trim()}
+                                          <span style={{ 
+                                              flex: 1, 
+                                              fontSize: '13.5px', 
+                                              fontWeight: '700', 
+                                              color: '#334155', 
+                                              lineHeight: '1.5', 
+                                              textAlign: 'left' 
+                                          }}>
+                                              {dName.replace(/\|/g, ' ')}
                                           </span>
-                                          <span style={{ fontSize: '11px', fontWeight: '800', color: isNodeOnline ? '#10b981' : '#ef4444', backgroundColor: isNodeOnline ? '#dcfce7' : '#fee2e2', padding: '4px 8px', borderRadius: '8px' }}>
+                                          <span style={{ 
+                                              fontSize: '11px', 
+                                              fontWeight: '800', 
+                                              color: isNodeOnline ? '#10b981' : '#ef4444', 
+                                              backgroundColor: isNodeOnline ? '#dcfce7' : '#fee2e2', 
+                                              padding: '6px 10px', 
+                                              borderRadius: '8px', 
+                                              flexShrink: 0, 
+                                              whiteSpace: 'nowrap' 
+                                          }}>
                                               {isNodeOnline ? 'ONLINE' : 'OFFLINE'}
                                           </span>
                                       </div>
@@ -776,7 +794,7 @@ export default function Home() {
                 left: 50% !important;
                 transform: translateX(-50%) !important;
                 width: 92vw !important; 
-                max-width: 350px !important;
+                max-width: 400px !important; 
             }
 
             .map-toolbar { top: 85px !important; left: 10px !important; }
@@ -825,15 +843,14 @@ export default function Home() {
             .legend-item { padding: 2px !important; width: auto !important; }
             .legend-item span { font-size: 11px !important; }
 
-            /* 🌟 [แก้ไขใหม่] ปรับ CSS Tooltip สำหรับจอมือถือโดยเฉพาะ */
             .legend-tooltip {
                 position: fixed !important;
-                bottom: 85px !important; /* ลอยอยู่เหนือกล่องแถบสี */
+                bottom: 85px !important; 
                 left: 50% !important;
                 transform: translateX(-50%) translateY(10px) !important;
-                width: 90vw !important; /* กว้างเกือบเต็มจอ */
+                width: 90vw !important; 
                 max-width: 400px !important;
-                white-space: normal !important; /* ปล่อยให้ข้อความขึ้นบรรทัดใหม่ได้ */
+                white-space: normal !important; 
             }
             
             .legend-item-wrapper:hover .legend-tooltip,
@@ -841,7 +858,6 @@ export default function Home() {
                 transform: translateX(-50%) translateY(0) !important;
             }
             
-            /* ซ่อนลูกศรสามเหลี่ยมบนมือถือ เพราะตำแหน่งมันเปลี่ยนไปอยู่ตรงกลางจอแล้ว */
             .legend-tooltip::after {
                 display: none !important; 
             }
