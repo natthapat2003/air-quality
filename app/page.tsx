@@ -12,7 +12,6 @@ import {
     Layers, CheckCircle2, ChevronDown, Menu 
 } from 'lucide-react'; 
 
-// 🌟 อัปเดตเกณฑ์ PM2.5 (แบบไม่มีทศนิยม)
 const getStatusColor = (pm25: number) => {
   if (pm25 <= 15) return '#0ea5e9'; 
   if (pm25 <= 25) return '#10b981'; 
@@ -98,10 +97,12 @@ const WeatherCard = ({ icon, label, value, unit }: any) => (
   </div>
 );
 
-const LegendItem = ({ color, text }: { color: string, text: string }) => (
-    <div className="legend-item" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+// 🌟 อัปเกรด LegendItem: เพิ่มคำอธิบาย advice และคลาสสำหรับแสดง Tooltip
+const LegendItem = ({ color, text, advice }: { color: string, text: string, advice: string }) => (
+    <div className="legend-item legend-item-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
       <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: color, boxShadow: `0 0 10px ${color}` }}></div>
       <span style={{ fontSize: '14px', fontWeight: '800', color: '#475569', whiteSpace: 'nowrap' }}>{text}</span>
+      <div className="legend-tooltip" dangerouslySetInnerHTML={{ __html: advice }}></div>
     </div>
 );
 
@@ -238,7 +239,6 @@ export default function Home() {
 
       await fetchNodeNames();
 
-      // 🌟 ดึงข้อมูลจากตารางจริง (sensor_data) อย่างเดียว
       const { data: sensorData } = await supabase.from('sensor_data').select('*').order('created_at', { ascending: false }).limit(50);
       
       if (sensorData && sensorData.length > 0) {
@@ -287,7 +287,6 @@ export default function Home() {
         fetchInitialData();
     });
 
-    // 🌟 ดักจับข้อมูลเข้าใหม่จากตารางของจริงอย่างเดียว
     const channel = supabase.channel('public:sensor_data')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sensor_data' }, (payload) => {
             updateNodeData(payload.new);
@@ -668,7 +667,7 @@ export default function Home() {
 
       <div id="map"></div>
 
-      {/* 🌟 ป้ายบอกสีแบบไม่มีทศนิยม (จำนวนเต็ม) */}
+      {/* 🌟 ปรับแต่งส่วนแสดงสี Legend ให้รองรับ Tooltip */}
       <div className="map-legend" style={{
           position: 'absolute', bottom: '30px', left: '20px', zIndex: 1000,
           backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
@@ -677,26 +676,74 @@ export default function Home() {
           boxShadow: '0 10px 40px -10px rgba(0,0,0,0.15)',
           boxSizing: 'border-box'
       }}>
-          <LegendItem color="#0ea5e9" text="ดีมาก (0 - 15)" />
-          <LegendItem color="#10b981" text="ดี (16 - 25)" />
-          <LegendItem color="#f59e0b" text="ปานกลาง (26 - 37)" />
-          <LegendItem color="#f97316" text="เริ่มมีผล (38 - 75)" />
-          <LegendItem color="#ef4444" text="มีผลกระทบ (76+)" />
+          <LegendItem color="#0ea5e9" text="ดีมาก (0 - 15)" advice="💙 <b>คุณภาพอากาศดีมาก</b><br/>สามารถทำกิจกรรมกลางแจ้งได้ตามปกติ" />
+          <LegendItem color="#10b981" text="ดี (16 - 25)" advice="💚 <b>คุณภาพอากาศดี</b><br/>ทั่วไปทำกิจกรรมได้ปกติ<br/>กลุ่มเสี่ยงเลี่ยงกิจกรรมที่ใช้แรงมาก" />
+          <LegendItem color="#f59e0b" text="ปานกลาง (26 - 37)" advice="💛 <b>คุณภาพอากาศปานกลาง</b><br/>ลดระยะเวลากิจกรรมที่ใช้แรงมาก<br/>และควรสวมหน้ากากป้องกันฝุ่น" />
+          <LegendItem color="#f97316" text="เริ่มมีผล (38 - 75)" advice="🧡 <b>เริ่มมีผลกระทบ</b><br/>หลีกเลี่ยงกิจกรรมกลางแจ้ง<br/>สวมหน้ากากป้องกันฝุ่นทุกครั้ง" />
+          <LegendItem color="#ef4444" text="มีผลกระทบ (76+)" advice="❤️ <b>อันตรายต่อสุขภาพ</b><br/>งดกิจกรรมนอกอาคาร<br/>ควรอยู่ในห้องปลอดฝุ่น" />
       </div>
 
+      {/* 🌟 เพิ่มคำสั่ง CSS สำหรับ Tooltip ของ Legend ไว้ด้านล่างสุด */}
       <style dangerouslySetInnerHTML={{__html: `
-        /* ล็อคไม่ให้เว็บเลื่อนซ้ายขวาได้เด็ดขาด */
         html, body {
             overflow-x: hidden !important;
             max-width: 100vw !important;
         }
 
-        /* ❌ ไม้ตาย: ซ่อนปุ่มซูมของ Leaflet แบบถาวร 100% ไม่ว่าจะหน้าจอไหนก็ตาม */
         .leaflet-control-zoom {
             display: none !important;
         }
 
-        /* สำหรับหน้าจอมือถือ (ความกว้างไม่เกิน 768px) */
+        /* --- CSS สำหรับ Tooltip เวลาเอาเมาส์ชี้ --- */
+        .legend-item-wrapper {
+            position: relative;
+            cursor: pointer; 
+        }
+        .legend-tooltip {
+            visibility: hidden;
+            opacity: 0;
+            position: absolute;
+            bottom: 130%; 
+            left: 50%;
+            transform: translateX(-50%) translateY(10px);
+            background-color: rgba(15, 23, 42, 0.95);
+            color: #f8fafc;
+            text-align: center;
+            padding: 10px 14px;
+            border-radius: 12px;
+            font-size: 13px;
+            font-weight: 500;
+            line-height: 1.5;
+            width: max-content;
+            max-width: 250px;
+            z-index: 10000;
+            transition: all 0.2s cubic-bezier(0.25, 0.8, 0.25, 1);
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3);
+            pointer-events: none;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .legend-tooltip b {
+            color: #ffffff;
+            font-size: 14px;
+        }
+        /* ทำสามเหลี่ยมชี้ลงด้านล่าง Tooltip */
+        .legend-tooltip::after {
+            content: '';
+            position: absolute;
+            top: 100%;
+            left: 50%;
+            margin-left: -6px;
+            border-width: 6px;
+            border-style: solid;
+            border-color: rgba(15, 23, 42, 0.95) transparent transparent transparent;
+        }
+        /* แอนิเมชั่นตอนเอาเมาส์ชี้ (หรือเอานิ้วกดบนมือถือ) */
+        .legend-item-wrapper:hover .legend-tooltip {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
         @media (max-width: 768px) {
             .desktop-only { display: none !important; }
             .mobile-menu-btn { 
@@ -713,22 +760,19 @@ export default function Home() {
             }
             .mobile-menu-btn:active { transform: scale(0.95); background: #dbeafe; }
             
-            /* Navbar ย่อส่วนและดึงให้ชื่อเว็บอยู่ครบ */
             .navbar { padding: 10px 12px !important; height: 65px !important; }
             .nav-right { gap: 6px !important; }
             .brand { gap: 8px !important; }
             
-            /* 🌟 บังคับแสดงชื่อเว็บ AQI Monitor KSU บนมือถือ */
             .brand-text { 
                 font-size: 16px !important; 
                 white-space: nowrap !important; 
-                display: inline-block !important; /* งัดกับ mobile.css เดิม */
+                display: inline-block !important; 
             }
 
             .brand-icon { padding: 5px !important; border-radius: 8px !important; }
             .brand-icon svg { width: 16px !important; height: 16px !important; }
             
-            /* ปุ่มสถานะออนไลน์ย่อขนาดลง */
             .status-pill { padding: 4px 8px !important; font-size: 11px !important; }
             .status-text { max-width: 70px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: inline-block; vertical-align: middle; }
             
@@ -741,11 +785,9 @@ export default function Home() {
                 max-width: 350px !important;
             }
 
-            /* ปุ่มบนแผนที่ขยับลงมาไม่ให้ชนเมนู */
             .map-toolbar { top: 85px !important; left: 10px !important; }
             .map-layer-menu { left: 55px !important; width: 180px !important; }
 
-            /* 🌟 Bottom Sheet เด้งจากด้านล่างแบบเลื่อนได้ */
             .info-panel {
                 position: fixed !important;
                 top: auto !important;
@@ -755,10 +797,10 @@ export default function Home() {
                 transform: none !important;
                 width: 100% !important;
                 max-width: 100% !important;
-                max-height: 70vh !important; /* ปรับให้สูงขึ้นนิดนึง */
-                overflow-y: auto !important; /* 🌟 สำคัญมาก: ทำให้เลื่อนนิ้วขึ้นลงได้ */
+                max-height: 70vh !important; 
+                overflow-y: auto !important; 
                 border-radius: 24px 24px 0 0 !important;
-                padding: 20px 20px 40px 20px !important; /* เพิ่มขอบล่างเผื่อตกขอบ */
+                padding: 20px 20px 40px 20px !important; 
                 z-index: 1005 !important;
                 box-shadow: 0 -10px 40px rgba(0,0,0,0.15) !important;
             }
@@ -772,7 +814,6 @@ export default function Home() {
             .weather-card-value { font-size: 18px !important; }
             .ai-box { padding: 15px !important; }
             
-            /* แผงสี Legend จัดเรียงแนวนอนแบบกะทัดรัด */
             .map-legend {
                 bottom: 15px !important;
                 left: 50% !important;
