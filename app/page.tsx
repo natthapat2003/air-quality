@@ -97,7 +97,6 @@ const WeatherCard = ({ icon, label, value, unit }: any) => (
   </div>
 );
 
-// 🌟 อัปเกรด LegendItem: เพิ่มคำอธิบาย advice และคลาสสำหรับแสดง Tooltip
 const LegendItem = ({ color, text, advice }: { color: string, text: string, advice: string }) => (
     <div className="legend-item legend-item-wrapper" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
       <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: color, boxShadow: `0 0 10px ${color}` }}></div>
@@ -667,7 +666,6 @@ export default function Home() {
 
       <div id="map"></div>
 
-      {/* 🌟 ปรับแต่งส่วนแสดงสี Legend ให้รองรับ Tooltip */}
       <div className="map-legend" style={{
           position: 'absolute', bottom: '30px', left: '20px', zIndex: 1000,
           backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(12px)', WebkitBackdropFilter: 'blur(12px)',
@@ -683,7 +681,6 @@ export default function Home() {
           <LegendItem color="#ef4444" text="มีผลกระทบ (76+)" advice="❤️ <b>อันตรายต่อสุขภาพ</b><br/>งดกิจกรรมนอกอาคาร<br/>ควรอยู่ในห้องปลอดฝุ่น" />
       </div>
 
-      {/* 🌟 เพิ่มคำสั่ง CSS สำหรับ Tooltip ของ Legend ไว้ด้านล่างสุด */}
       <style dangerouslySetInnerHTML={{__html: `
         html, body {
             overflow-x: hidden !important;
@@ -694,7 +691,6 @@ export default function Home() {
             display: none !important;
         }
 
-        /* --- CSS สำหรับ Tooltip เวลาเอาเมาส์ชี้ --- */
         .legend-item-wrapper {
             position: relative;
             cursor: pointer; 
@@ -726,7 +722,6 @@ export default function Home() {
             color: #ffffff;
             font-size: 14px;
         }
-        /* ทำสามเหลี่ยมชี้ลงด้านล่าง Tooltip */
         .legend-tooltip::after {
             content: '';
             position: absolute;
@@ -737,7 +732,6 @@ export default function Home() {
             border-style: solid;
             border-color: rgba(15, 23, 42, 0.95) transparent transparent transparent;
         }
-        /* แอนิเมชั่นตอนเอาเมาส์ชี้ (หรือเอานิ้วกดบนมือถือ) */
         .legend-item-wrapper:hover .legend-tooltip {
             visibility: visible;
             opacity: 1;
@@ -830,6 +824,27 @@ export default function Home() {
             }
             .legend-item { padding: 2px !important; width: auto !important; }
             .legend-item span { font-size: 11px !important; }
+
+            /* 🌟 [แก้ไขใหม่] ปรับ CSS Tooltip สำหรับจอมือถือโดยเฉพาะ */
+            .legend-tooltip {
+                position: fixed !important;
+                bottom: 85px !important; /* ลอยอยู่เหนือกล่องแถบสี */
+                left: 50% !important;
+                transform: translateX(-50%) translateY(10px) !important;
+                width: 90vw !important; /* กว้างเกือบเต็มจอ */
+                max-width: 400px !important;
+                white-space: normal !important; /* ปล่อยให้ข้อความขึ้นบรรทัดใหม่ได้ */
+            }
+            
+            .legend-item-wrapper:hover .legend-tooltip,
+            .legend-item-wrapper:active .legend-tooltip {
+                transform: translateX(-50%) translateY(0) !important;
+            }
+            
+            /* ซ่อนลูกศรสามเหลี่ยมบนมือถือ เพราะตำแหน่งมันเปลี่ยนไปอยู่ตรงกลางจอแล้ว */
+            .legend-tooltip::after {
+                display: none !important; 
+            }
         }
 
         @media (min-width: 769px) {
