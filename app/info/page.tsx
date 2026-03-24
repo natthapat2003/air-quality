@@ -1,16 +1,101 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { supabase } from '../../lib/supabase';
 import Link from 'next/link';
-import '../mobile.css';
 
-import { 
-    Wind, LayoutDashboard, History, Info as InfoIcon, Clock, BookOpen, Menu, X
+import {
+  Wind, LayoutDashboard, History, Info, Clock, Lock, LogOut,
+  BookOpen, ShieldCheck, AlertCircle, AlertTriangle, ShieldAlert,
+  HeartPulse, Activity, CheckCircle2, Menu, X
 } from 'lucide-react';
 
+// ข้อมูลเกณฑ์คุณภาพอากาศ (อ้างอิงกรมอนามัย)
+const aqiGuidelines = [
+  {
+    range: "0 - 15",
+    status: "ดีมาก",
+    color: "#0ea5e9", bg: "#f0f9ff", border: "#bae6fd",
+    icon: <HeartPulse size={28} color="#0ea5e9" />,
+    adviceAll: ["สามารถทำกิจกรรมกลางแจ้งและการท่องเที่ยวได้ตามปกติ"],
+    adviceRisk: ["ทำกิจกรรมได้ตามปกติ"]
+  },
+  {
+    range: "16 - 25",
+    status: "ดี",
+    color: "#10b981", bg: "#f0fdf4", border: "#bbf7d0",
+    icon: <ShieldCheck size={28} color="#10b981" />,
+    adviceAll: ["สามารถทำกิจกรรมกลางแจ้งได้ตามปกติ"],
+    adviceRisk: ["ควรเลี่ยงการทำกิจกรรมที่ใช้แรงมาก", "สังเกตอาการตนเอง หากมีอาการผิดปกติควรลดกิจกรรมกลางแจ้ง"]
+  },
+  {
+    range: "26 - 37",
+    status: "ปานกลาง",
+    color: "#f59e0b", bg: "#fffbeb", border: "#fde68a",
+    icon: <AlertCircle size={28} color="#f59e0b" />,
+    adviceAll: [
+      "ลดระยะเวลาการทำกิจกรรมที่ใช้แรงมาก หรือการออกกำลังกายกลางแจ้ง",
+      "สวมหน้ากากป้องกันฝุ่นละอองทุกครั้งเมื่ออยู่กลางแจ้ง",
+      "หากมีอาการผิดปกติ เช่น ไอ หายใจลำบาก ให้รีบพบแพทย์"
+    ],
+    adviceRisk: [
+      "ลดระยะเวลาการทำกิจกรรมที่ใช้แรงมาก หรือการออกกำลังกายกลางแจ้ง",
+      "สวมหน้ากากป้องกันฝุ่นละอองทุกครั้งเมื่ออยู่กลางแจ้ง",
+      "ผู้ที่มีโรคประจำตัวควรเตรียมยาให้พร้อม"
+    ]
+  },
+  {
+    range: "38 - 75",
+    status: "เริ่มมีผลกระทบ",
+    color: "#f97316", bg: "#fff7ed", border: "#fed7aa",
+    icon: <AlertTriangle size={28} color="#f97316" />,
+    adviceAll: [
+      "หลีกเลี่ยงการออกกำลังกายกลางแจ้ง หรือการทำงานที่ใช้แรงมาก",
+      "สวมหน้ากากป้องกันฝุ่นละออง (N95) ทุกครั้งเมื่ออยู่กลางแจ้ง",
+      "หากมีอาการผิดปกติ ให้รีบพบแพทย์ทันที"
+    ],
+    adviceRisk: [
+      "งดการทำกิจกรรมกลางแจ้งโดยเด็ดขาด",
+      "อยู่ในอาคาร หรือห้องที่มีระบบฟอกอากาศ",
+      "หากมีอาการผิดปกติ ให้รีบพบแพทย์ทันที"
+    ]
+  },
+  {
+    range: "76 ขึ้นไป",
+    status: "มีผลกระทบต่อสุขภาพ",
+    color: "#ef4444", bg: "#fef2f2", border: "#fecaca",
+    icon: <ShieldAlert size={28} color="#ef4444" />,
+    adviceAll: [
+      "งดกิจกรรมนอกอาคาร และการออกกำลังกายกลางแจ้งทุกชนิด",
+      "อยู่ในอาคาร หรือห้องปฏิบัติการที่ปลอดฝุ่น (Clean Room)",
+      "สวมหน้ากาก N95 ตลอดเวลาหากมีความจำเป็นต้องออกนอกอาคาร",
+      "หากมีอาการผิดปกติ ให้รีบไปพบแพทย์ทันที"
+    ],
+    adviceRisk: [
+      "งดกิจกรรมนอกอาคารทุกชนิดโดยเด็ดขาด",
+      "ควรอยู่ในห้องที่ปิดมิดชิดและมีเครื่องฟอกอากาศ",
+      "เตรียมยาและอุปกรณ์ทางการแพทย์ให้พร้อมใช้งานเสมอ"
+    ]
+  }
+];
+
 export default function InfoPage() {
+  const [isAdmin, setIsAdmin] = useState(false);
   const [clock, setClock] = useState("กำลังโหลดเวลา...");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsAdmin(!!session);
+    };
+    checkSession();
+    
+    const { data: authListener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsAdmin(!!session);
+    });
+    return () => authListener.subscription.unsubscribe();
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -20,198 +105,214 @@ export default function InfoPage() {
     return () => clearInterval(timer);
   }, []);
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    alert("ออกจากระบบเรียบร้อย");
+    window.location.reload();
+  };
+
   return (
     <>
+      {/* 🌟 Navbar คงรูปแบบเดิมเพื่อความสม่ำเสมอ */}
       <nav className="navbar" style={{ position: 'relative', zIndex: 1006, boxSizing: 'border-box' }}>
-        <div className="brand">
-            <div className="brand-icon">
-                <Wind size={22} strokeWidth={2.5} />
-            </div>
-            <span className="brand-text">AQI Monitor <span style={{ color: '#3b82f6' }}>KSU</span></span>
-        </div>
+          <div className="brand">
+              <div className="brand-icon">
+                  <Wind size={22} strokeWidth={2.5} />
+              </div>
+              <span className="brand-text">AQI Monitor <span style={{ color: '#3b82f6' }}>KSU</span></span>
+          </div>
 
-        <div className="nav-right" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div className="nav-links desktop-only">
-                <Link href="/" className="nav-item">
-                    <LayoutDashboard size={16} strokeWidth={2.5} /> <span>หน้าแรก</span>
-                </Link>
-                <Link href="/history" className="nav-item">
-                    <History size={16} strokeWidth={2.5} /> <span>ข้อมูลย้อนหลัง</span>
-                </Link>
-                <Link href="/info" className="nav-item active">
-                    <InfoIcon size={16} strokeWidth={2.5} /> <span>เกณฑ์คุณภาพอากาศ</span>
-                </Link>
-            </div>
-            
-            <div className="nav-divider desktop-only"></div>
+          <div className="nav-right" style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+              <div className="nav-links desktop-only">
+                  <Link href="/" className="nav-item">
+                      <LayoutDashboard size={16} strokeWidth={2.5} /> <span>หน้าแรก</span>
+                  </Link>
+                  <Link href="/history" className="nav-item">
+                      <History size={16} strokeWidth={2.5} /> <span>ข้อมูลย้อนหลัง</span>
+                  </Link>
+                  <Link href="/info" className="nav-item active">
+                      <Info size={16} strokeWidth={2.5} /> <span>เกณฑ์คุณภาพอากาศ</span>
+                  </Link>
+              </div>
+              
+              <div className="nav-divider desktop-only"></div> 
 
-            <div id="live-clock" className="live-clock desktop-only">
-                <Clock size={16} strokeWidth={2.5} color="#64748b" />
-                <span>{clock}</span>
-            </div>
+              {!isAdmin ? (
+                <Link href="/login" className="desktop-only" style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '8px 16px', backgroundColor: '#f1f5f9', color: '#475569',
+                  borderRadius: '20px', fontWeight: '700', fontSize: '13.5px', textDecoration: 'none', transition: 'all 0.2s'
+                }}
+                  onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#e2e8f0'; e.currentTarget.style.color = '#0f172a'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#f1f5f9'; e.currentTarget.style.color = '#475569'; }}>
+                  <Lock size={16} strokeWidth={2.5} /> Admin Login
+                </Link>
+              ) : (
+                <button onClick={handleLogout} className="desktop-only" style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '8px 16px', backgroundColor: '#fee2e2', color: '#ef4444', border: 'none', cursor: 'pointer',
+                  borderRadius: '20px', fontWeight: '700', fontSize: '13.5px', transition: 'all 0.2s'
+                }}
+                  onMouseOver={(e) => { e.currentTarget.style.backgroundColor = '#fecaca'; e.currentTarget.style.color = '#dc2626'; }}
+                  onMouseOut={(e) => { e.currentTarget.style.backgroundColor = '#fee2e2'; e.currentTarget.style.color = '#ef4444'; }}>
+                  <LogOut size={16} strokeWidth={2.5} /> ออกจากระบบ
+                </button>
+              )}
 
-            <button 
-                className="mobile-menu-btn"
-                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            >
-                {isMobileMenuOpen ? <X size={22} strokeWidth={2.5} /> : <Menu size={22} strokeWidth={2.5} />}
-            </button>
-        </div>
+              <div id="live-clock" className="live-clock desktop-only">
+                  <Clock size={16} strokeWidth={2.5} color="#64748b" />
+                  <span>{clock}</span>
+              </div>
 
-        {isMobileMenuOpen && (
-            <div className="mobile-dropdown">
-                <Link href="/" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#475569', fontWeight: '700', padding: '12px', textDecoration: 'none' }}>
-                    <LayoutDashboard size={18} strokeWidth={2.5} /> หน้าแรก
-                </Link>
-                <Link href="/history" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#475569', fontWeight: '700', padding: '12px', textDecoration: 'none' }}>
-                    <History size={18} strokeWidth={2.5} /> ข้อมูลย้อนหลัง
-                </Link>
-                <Link href="/info" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#2563eb', fontWeight: '700', padding: '12px', backgroundColor: '#eff6ff', borderRadius: '12px', textDecoration: 'none' }}>
-                    <InfoIcon size={18} strokeWidth={2.5} /> เกณฑ์คุณภาพอากาศ
-                </Link>
-            </div>
-        )}
+              <button 
+                  className="mobile-menu-btn"
+                  onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                  {isMobileMenuOpen ? <X size={22} strokeWidth={2.5} /> : <Menu size={22} strokeWidth={2.5} />}
+              </button>
+          </div>
+
+          {isMobileMenuOpen && (
+              <div className="mobile-dropdown">
+                  <Link href="/" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#475569', fontWeight: '700', padding: '12px', textDecoration: 'none' }}>
+                      <LayoutDashboard size={18} strokeWidth={2.5} /> หน้าแรก
+                  </Link>
+                  <Link href="/history" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#475569', fontWeight: '700', padding: '12px', textDecoration: 'none' }}>
+                      <History size={18} strokeWidth={2.5} /> ข้อมูลย้อนหลัง
+                  </Link>
+                  <Link href="/info" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#2563eb', fontWeight: '700', padding: '12px', backgroundColor: '#eff6ff', borderRadius: '12px', textDecoration: 'none' }}>
+                      <Info size={18} strokeWidth={2.5} /> เกณฑ์คุณภาพอากาศ
+                  </Link>
+                  
+                  <div style={{ height: '1px', backgroundColor: '#e2e8f0', margin: '5px 0' }}></div>
+                  {!isAdmin ? (
+                    <Link href="/login" onClick={() => setIsMobileMenuOpen(false)} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#475569', fontWeight: '700', padding: '12px', textDecoration: 'none' }}>
+                        <Lock size={18} strokeWidth={2.5} /> Admin Login
+                    </Link>
+                  ) : (
+                    <button onClick={handleLogout} style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#ef4444', fontWeight: '700', padding: '12px', textDecoration: 'none', background: 'none', border: 'none', width: '100%', textAlign: 'left', fontFamily: 'inherit', fontSize: '15px' }}>
+                        <LogOut size={18} strokeWidth={2.5} /> ออกจากระบบ
+                    </button>
+                  )}
+              </div>
+          )}
       </nav>
 
       <div className="container" style={{ padding: '40px 20px', maxWidth: '1200px', margin: '0 auto' }}>
-        <div className="card" style={{ borderRadius: '24px', border: '1px solid #f1f5f9', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.08)', padding: '35px', backgroundColor: '#ffffff', boxSizing: 'border-box' }}>
+        <div className="card" style={{ backgroundColor: '#ffffff', borderRadius: '24px', border: '1px solid #f1f5f9', boxShadow: '0 20px 50px -10px rgba(0,0,0,0.05)', overflow: 'hidden' }}>
+          
+          {/* Header Section */}
+          <div style={{ padding: '40px', borderBottom: '1px solid #e2e8f0', backgroundColor: '#f8fafc' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '12px' }}>
+              <div style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', padding: '14px', borderRadius: '16px', color: 'white', boxShadow: '0 10px 20px -5px rgba(59, 130, 246, 0.4)' }}>
+                <BookOpen size={28} strokeWidth={2.5} />
+              </div>
+              <div>
+                <h1 style={{ fontSize: '28px', fontWeight: '900', color: '#0f172a', margin: 0, letterSpacing: '-0.5px' }}>เกณฑ์การปฏิบัติตนตามระดับฝุ่น PM2.5</h1>
+                <p style={{ fontSize: '15px', color: '#64748b', margin: '6px 0 0 0', fontWeight: '600' }}>คำแนะนำและข้อควรระวังด้านสุขภาพ อ้างอิงตามมาตรฐานของกรมอนามัย</p>
+              </div>
+            </div>
+          </div>
+
+          {/* Content Section (Cards instead of Table) */}
+          <div style={{ padding: '40px', display: 'flex', flexDirection: 'column', gap: '24px' }} className="info-content-padding">
             
-            <div className="header-row" style={{ width: '100%', marginBottom: '30px', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '12px', textAlign: 'left' }}>
-                <div style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', padding: '10px', borderRadius: '12px', color: 'white', boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)' }}>
-                    <BookOpen size={24} strokeWidth={2} />
+            {aqiGuidelines.map((item, index) => (
+              <div key={index} className="aqi-card" style={{ 
+                display: 'flex', 
+                backgroundColor: '#ffffff', 
+                border: '1px solid #e2e8f0', 
+                borderRadius: '20px', 
+                overflow: 'hidden',
+                boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+                transition: 'all 0.3s ease'
+              }}>
+                {/* Left Side: Color & Range */}
+                <div className="aqi-card-left" style={{ 
+                  backgroundColor: item.bg, 
+                  borderLeft: `8px solid ${item.color}`,
+                  padding: '30px 20px', 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  justifyContent: 'center',
+                  minWidth: '220px',
+                  borderRight: '1px solid #e2e8f0'
+                }}>
+                  <div style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '50%', marginBottom: '12px', boxShadow: `0 4px 15px -5px ${item.color}60` }}>
+                    {item.icon}
+                  </div>
+                  <div style={{ fontSize: '32px', fontWeight: '900', color: '#0f172a', lineHeight: '1' }}>{item.range}</div>
+                  <div style={{ fontSize: '13px', fontWeight: '700', color: '#64748b', marginTop: '4px' }}>µg/m³</div>
+                  
+                  <div style={{ 
+                    marginTop: '16px', 
+                    backgroundColor: item.color, 
+                    color: '#ffffff', 
+                    padding: '6px 20px', 
+                    borderRadius: '20px', 
+                    fontSize: '14px', 
+                    fontWeight: '800',
+                    boxShadow: `0 4px 10px ${item.color}40`
+                  }}>
+                    {item.status}
+                  </div>
                 </div>
-                <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#0f172a', margin: 0, letterSpacing: '-0.5px' }}>เกณฑ์การปฏิบัติตนตามระดับค่าสีฝุ่น PM2.5</h2>
-            </div>
-            
-            <div className="table-responsive" style={{ border: '1px solid #e2e8f0', borderRadius: '16px', overflowX: 'auto', WebkitOverflowScrolling: 'touch' }}>
-                <table style={{ minWidth: '800px', width: '100%', borderCollapse: 'collapse', backgroundColor: '#ffffff' }}>
-                    <thead>
-                        <tr style={{ backgroundColor: '#f8fafc', borderBottom: '2px solid #e2e8f0' }}>
-                            <th style={{ padding: '20px 24px', color: '#475569', fontWeight: '800', width: '20%', textAlign: 'center', whiteSpace: 'nowrap' }}>ปริมาณฝุ่น PM2.5<br/><span style={{fontSize: '13px', fontWeight: '600'}}>(µg/m³)</span></th>
-                            <th style={{ padding: '20px 24px', color: '#475569', fontWeight: '800', width: '15%', textAlign: 'center', whiteSpace: 'nowrap' }}>คุณภาพอากาศ</th>
-                            <th style={{ padding: '20px 24px', color: '#475569', fontWeight: '800', width: '65%', textAlign: 'left' }}>การปฏิบัติตน (อ้างอิงกรมอนามัย)</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {/* 🌟 อัปเดตเกณฑ์เป็นจำนวนเต็มทั้งหมด */}
-                        {/* ดีมาก */}
-                        <tr style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
-                            <td style={{ padding: '24px', fontWeight: '900', color: '#0f172a', fontSize: '18px', textAlign: 'center', whiteSpace: 'nowrap' }}>0 - 15</td>
-                            <td style={{ padding: '24px', textAlign: 'center' }}>
-                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#f0f9ff', border: '1px solid #bae6fd', padding: '6px 14px', borderRadius: '12px' }}>
-                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#0ea5e9', boxShadow: '0 0 8px #0ea5e9' }}></div>
-                                    <span style={{ fontSize: '14px', fontWeight: '800', color: '#0ea5e9', whiteSpace: 'nowrap' }}>ดีมาก</span>
-                                </div>
-                            </td>
-                            <td style={{ padding: '24px', color: '#475569', fontSize: '15px', lineHeight: '1.6', textAlign: 'left' }}>
-                                <span style={{ fontWeight: '800', color: '#0f172a' }}>ประชาชนทุกคน และ กลุ่มเสี่ยง</span>
-                                <ul style={{ margin: '0', paddingLeft: '24px', listStyleType: 'disc', color: '#475569' }}>
-                                    <li>ทำกิจกรรมได้ตามปกติ</li>
-                                </ul>
-                            </td>
-                        </tr>
 
-                        {/* ดี */}
-                        <tr style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
-                            <td style={{ padding: '24px', fontWeight: '900', color: '#0f172a', fontSize: '18px', textAlign: 'center', whiteSpace: 'nowrap' }}>16 - 25</td>
-                            <td style={{ padding: '24px', textAlign: 'center' }}>
-                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#f0fdf4', border: '1px solid #a7f3d0', padding: '6px 14px', borderRadius: '12px' }}>
-                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#10b981', boxShadow: '0 0 8px #10b981' }}></div>
-                                    <span style={{ fontSize: '14px', fontWeight: '800', color: '#10b981', whiteSpace: 'nowrap' }}>ดี</span>
-                                </div>
-                            </td>
-                            <td style={{ padding: '24px', color: '#475569', fontSize: '15px', lineHeight: '1.6', textAlign: 'left' }}>
-                                <div style={{ marginBottom: '8px' }}>
-                                    <span style={{ fontWeight: '800', color: '#0f172a' }}>ประชาชนทุกคน</span> ทำกิจกรรมได้ตามปกติ
-                                </div>
-                                <div>
-                                    <span style={{ fontWeight: '800', color: '#ef4444' }}>กลุ่มเสี่ยง</span> เลี่ยงการทำกิจกรรมที่ใช้แรงมาก และสังเกตอาการตนเอง
-                                </div>
-                            </td>
-                        </tr>
+                {/* Right Side: Advice */}
+                <div className="aqi-card-right" style={{ padding: '30px', flex: 1, display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  
+                  {/* ประชาชนทั่วไป */}
+                  <div>
+                    <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', fontWeight: '800', color: '#1e293b', margin: '0 0 12px 0' }}>
+                      <Activity size={18} color="#3b82f6" /> สำหรับประชาชนทั่วไป
+                    </h4>
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {item.adviceAll.map((text, i) => (
+                        <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '15px', color: '#475569', lineHeight: '1.6', fontWeight: '500' }}>
+                          <CheckCircle2 size={16} color="#94a3b8" style={{ marginTop: '4px', flexShrink: 0 }} />
+                          <span>{text}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
 
-                        {/* ปานกลาง */}
-                        <tr style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
-                            <td style={{ padding: '24px', fontWeight: '900', color: '#0f172a', fontSize: '18px', textAlign: 'center', whiteSpace: 'nowrap' }}>26 - 37</td>
-                            <td style={{ padding: '24px', textAlign: 'center' }}>
-                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#fffbeb', border: '1px solid #fde68a', padding: '6px 14px', borderRadius: '12px' }}>
-                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#f59e0b', boxShadow: '0 0 8px #f59e0b' }}></div>
-                                    <span style={{ fontSize: '14px', fontWeight: '800', color: '#f59e0b', whiteSpace: 'nowrap' }}>ปานกลาง</span>
-                                </div>
-                            </td>
-                            <td style={{ padding: '24px', color: '#475569', fontSize: '15px', lineHeight: '1.6', textAlign: 'left' }}>
-                                <div style={{ marginBottom: '12px' }}>
-                                    <span style={{ fontWeight: '800', color: '#0f172a', display: 'block', marginBottom: '4px' }}>ประชาชนทุกคน และ กลุ่มเสี่ยง</span>
-                                    <ul style={{ margin: '0', paddingLeft: '24px', listStyleType: 'disc', color: '#475569' }}>
-                                        <li style={{ marginBottom: '6px' }}>ลดระยะเวลาการทำกิจกรรมที่ใช้แรงมาก / การออกกำลังกายกลางแจ้ง</li>
-                                        <li style={{ marginBottom: '6px' }}>สวมหน้ากากป้องกันฝุ่นละอองทุกครั้งเมื่ออยู่กลางแจ้ง</li>
-                                        <li>หากมีอาการผิดปกติ ให้รีบพบแพทย์</li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
+                  {/* เส้นกั้น */}
+                  <div style={{ height: '1px', backgroundColor: '#f1f5f9', width: '100%' }}></div>
 
-                        {/* เริ่มมีผลกระทบ */}
-                        <tr style={{ borderBottom: '1px solid #f1f5f9', transition: 'background-color 0.2s' }} onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'} onMouseOut={(e) => e.currentTarget.style.backgroundColor = 'transparent'}>
-                            <td style={{ padding: '24px', fontWeight: '900', color: '#0f172a', fontSize: '18px', textAlign: 'center', whiteSpace: 'nowrap' }}>38 - 75</td>
-                            <td style={{ padding: '24px', textAlign: 'center' }}>
-                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#fff7ed', border: '1px solid #fed7aa', padding: '6px 14px', borderRadius: '12px' }}>
-                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#f97316', boxShadow: '0 0 8px #f97316' }}></div>
-                                    <span style={{ fontSize: '14px', fontWeight: '800', color: '#f97316', whiteSpace: 'nowrap' }}>เริ่มมีผลกระทบ</span>
-                                </div>
-                            </td>
-                            <td style={{ padding: '24px', color: '#475569', fontSize: '15px', lineHeight: '1.6', textAlign: 'left' }}>
-                                <div style={{ marginBottom: '12px' }}>
-                                    <span style={{ fontWeight: '800', color: '#0f172a', display: 'block', marginBottom: '4px' }}>ประชาชนทุกคน</span>
-                                    <ul style={{ margin: '0', paddingLeft: '24px', listStyleType: 'disc', color: '#475569' }}>
-                                        <li style={{ marginBottom: '6px' }}>หลีกเลี่ยงการออกกำลังกายกลางแจ้ง / การทำงานที่ใช้แรงมาก</li>
-                                        <li style={{ marginBottom: '6px' }}>สวมหน้ากากป้องกันฝุ่นละอองทุกครั้งเมื่ออยู่กลางแจ้ง</li>
-                                        <li>หากมีอาการผิดปกติ ให้รีบพบแพทย์</li>
-                                    </ul>
-                                </div>
-                                <div>
-                                    <span style={{ fontWeight: '800', color: '#ef4444', display: 'block', marginBottom: '4px' }}>กลุ่มเสี่ยง</span>
-                                    <ul style={{ margin: '0', paddingLeft: '24px', listStyleType: 'disc', color: '#475569' }}>
-                                        <li>หลีกเลี่ยงการทำกิจกรรมนอกอาคาร และควรเฝ้าระวังตนเอง</li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
+                  {/* กลุ่มเสี่ยง */}
+                  <div>
+                    <h4 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '16px', fontWeight: '800', color: '#ef4444', margin: '0 0 12px 0' }}>
+                      <AlertCircle size={18} color="#ef4444" /> สำหรับกลุ่มเสี่ยง <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: '600' }}>(เด็ก, ผู้สูงอายุ, หญิงตั้งครรภ์, ผู้ป่วย)</span>
+                    </h4>
+                    <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                      {item.adviceRisk.map((text, i) => (
+                        <li key={i} style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', fontSize: '15px', color: '#475569', lineHeight: '1.6', fontWeight: '500' }}>
+                          <CheckCircle2 size={16} color="#fca5a5" style={{ marginTop: '4px', flexShrink: 0 }} />
+                          <span>{text}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
 
-                        {/* มีผลกระทบ */}
-                        <tr style={{ transition: 'background-color 0.2s', backgroundColor: '#fef2f2' }}>
-                            <td style={{ padding: '24px', fontWeight: '900', color: '#ef4444', fontSize: '18px', textAlign: 'center', whiteSpace: 'nowrap' }}>76 ขึ้นไป</td>
-                            <td style={{ padding: '24px', textAlign: 'center' }}>
-                                <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', backgroundColor: '#ffffff', border: '1px solid #fecaca', padding: '6px 14px', borderRadius: '12px' }}>
-                                    <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#ef4444', boxShadow: '0 0 8px #ef4444' }}></div>
-                                    <span style={{ fontSize: '14px', fontWeight: '800', color: '#ef4444', whiteSpace: 'nowrap' }}>มีผลกระทบ</span>
-                                </div>
-                            </td>
-                            <td style={{ padding: '24px', color: '#475569', fontSize: '15px', lineHeight: '1.6', textAlign: 'left' }}>
-                                <div>
-                                    <span style={{ fontWeight: '900', color: '#ef4444', display: 'block', marginBottom: '4px', fontSize: '16px' }}>ประชาชนทุกคน และ กลุ่มเสี่ยง ⚠️</span>
-                                    <ul style={{ margin: '0', paddingLeft: '24px', listStyleType: 'disc', color: '#0f172a', fontWeight: '600' }}>
-                                        <li style={{ marginBottom: '6px' }}>งดทำกิจกรรมนอกอาคาร และการออกกำลังกายกลางแจ้ง</li>
-                                        <li style={{ marginBottom: '6px' }}>ให้อยู่ในห้องปลอดฝุ่น และสวมหน้ากากกันฝุ่นทุกครั้ง</li>
-                                        <li style={{ marginBottom: '6px' }}>หากมีอาการผิดปกติ ให้รีบพบแพทย์</li>
-                                        <li>ผู้ที่มีโรคประจำตัวเตรียมยาและอุปกรณ์ที่จำเป็นให้พร้อม รวมถึงปฏิบัติตามคำแนะนำทางการแพทย์</li>
-                                    </ul>
-                                </div>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
-            
-            <div style={{ marginTop: '24px', fontSize: '13px', fontWeight: '600', color: '#94a3b8', textAlign: 'right', display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '6px' }}>
-                <InfoIcon size={14} />
-                * อ้างอิงตามเกณฑ์กรมอนามัย (Department of Health) ปรับค่ามาตรฐานใหม่
-            </div>
+                </div>
+              </div>
+            ))}
+
+          </div>
         </div>
       </div>
 
       <style dangerouslySetInnerHTML={{
         __html: `
+        /* Hover Effect สำหรับการ์ด */
+        .aqi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 20px 40px -10px rgba(0,0,0,0.1) !important;
+            border-color: #cbd5e1 !important;
+        }
+
+        /* 📱 จัดการ Responsive สำหรับมือถือ */
         @media (max-width: 768px) {
             .desktop-only { display: none !important; }
             .mobile-menu-btn { 
@@ -236,11 +337,33 @@ export default function InfoPage() {
                 box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
             }
 
-            .container { padding: 15px !important; }
-            .card { padding: 20px 15px !important; }
-            .header-row h2 { font-size: 17px !important; }
-
-            th, td { padding: 15px 12px !important; }
+            .container { padding: 10px !important; }
+            .info-content-padding { padding: 20px !important; }
+            
+            /* เปลี่ยนจากการเรียงแนวนอน เป็นเรียงแนวตั้งบนมือถือ */
+            .aqi-card {
+                flex-direction: column !important;
+            }
+            
+            .aqi-card-left {
+                border-right: none !important;
+                border-bottom: 1px dashed #cbd5e1 !important;
+                border-left: none !important;
+                border-top: 8px solid var(--card-color) !important; /* ใช้สีขอบด้านบนแทน */
+                padding: 25px 20px !important;
+                min-width: 100% !important;
+            }
+            
+            /* อิงสี border-top จากสีที่กำหนดไว้ใน style (React จัดการให้แล้วส่วนหนึ่ง แต่ต้องบังคับทิศทาง) */
+            .aqi-card-left { border-left-width: 0 !important; border-top-width: 8px !important; border-top-style: solid !important; }
+            
+            .aqi-card-right {
+                padding: 20px !important;
+            }
+            
+            /* ลดขนาดฟอนต์บนมือถือนิดหน่อย */
+            .aqi-card-right h4 { font-size: 15px !important; }
+            .aqi-card-right li { font-size: 14px !important; }
         }
 
         @media (min-width: 769px) {
