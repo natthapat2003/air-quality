@@ -1,55 +1,55 @@
 import { NextResponse } from "next/server";
+import { GoogleGenerativeAI } from "@google/generative-ai";
 
 export async function POST(req: Request) {
   try {
     const body = await req.json();
     console.log("1. ข้อมูลที่ได้รับจากหน้าเว็บ:", body);
     
-    const apiKey = "AIzaSyCvqgHMNcJHqD50bHXZFZEOYUOloEV8Cow";
+    // ดึงคีย์จากไฟล์ .env.local
+    const apiKey = process.env.GOOGLE_GEMINI_API_KEY; 
 
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
+    if (!apiKey) {
+        console.error("🔥 หา API Key ไม่เจอ!");
+        return NextResponse.json({ error: "API Key missing" }, { status: 500 });
+    }
+
+    const genAI = new GoogleGenerativeAI(apiKey);
+    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
     
     const prompt = `
 คุณคือผู้เชี่ยวชาญด้านอุตุนิยมวิทยาและสุขภาพ 
-จงวิเคราะห์สภาพอากาศและคาดการณ์แนวโน้มจากค่าเซนเซอร์ที่วัดได้จริง ณ ${body.siteName} ต่อไปนี้:
-
+จงวิเคราะห์สภาพอากาศและคาดการณ์แนวโน้มจากค่าเซนเซอร์ ณ ${body.siteName}:
 - ฝุ่น PM2.5: ${body.pm25} µg/m³
 - อุณหภูมิ: ${body.temp} °C
 - ความชื้นสัมพัทธ์: ${body.hum} %
 - ความกดอากาศ: ${body.pressure} hPa
-- โอกาสเกิดฝน: ${body.rainChance} %
+- โอกาสเกิดฝน: ${body.rainChance}%
 
-ข้อกำหนดในการวิเคราะห์และตอบคำถาม (จัดรูปแบบด้วย Markdown ให้สวยงามอ่านง่าย):
-**สรุปสภาพอากาศปัจจุบัน:** อธิบายภาพรวมสั้นๆ ว่าอากาศตอนนี้เป็นอย่างไร โดยดูจากอุณหภูมิและความชื้นสัมพัทธ์
-**พยากรณ์โอกาสเกิดฝน:** ให้อธิบายความน่าจะเป็นของฝนโดยอ้างอิงจากตัวเลข "โอกาสเกิดฝน" เป็นหลัก หากโอกาสฝนน้อยแต่ความชื้นสูง ให้แนะนำว่าเป็นสภาวะอากาศปิดหรืออาจมีหมอก/ฝุ่นสะสม
-**คำแนะนำด้านสุขภาพและการใช้ชีวิต:** ให้คำแนะนำที่สอดคล้องกับค่าฝุ่น PM2.5 และโอกาสเกิดฝนอย่างสมเหตุสมผล
+ข้อกำหนดสำคัญ (ต้องปฏิบัติตามอย่างเคร่งครัด):
+1. **ห้ามมีคำลงท้าย "ครับ" หรือ "ค่ะ" โดยเด็ดขาด** (รวมถึงการเขียนแบบ "ครับ/ค่ะ" ก็ห้าม)
+2. **ห้ามใช้จุดทศนิยม** ให้แสดงผลเป็นตัวเลขจำนวนเต็มเท่านั้น
+3. **ใช้สัญลักษณ์ "%"** แทนการเขียนว่า "เปอร์เซ็นต์"
+4. เนื้อหาต้องกระชับ ตรงประเด็น ไม่ต้องมีคำเกริ่นนำทักทาย
 
-ขอให้ใช้ภาษาที่เป็นกันเอง สุภาพ กระชับ และอ่านเข้าใจง่าย
+รูปแบบการตอบ (Markdown):
+**สรุปสภาพอากาศปัจจุบัน:** อธิบายสั้นๆ เกี่ยวกับสภาวะอากาศในตอนนี้
+**พยากรณ์โอกาสเกิดฝน:** วิเคราะห์แนวโน้มจากโอกาสฝน ${body.rainChance}% และความกดอากาศ
+**คำแนะนำด้านสุขภาพและการใช้ชีวิต:** ให้คำแนะนำที่เหมาะสมกับค่าฝุ่น ${body.pm25} และสภาพอากาศ
 `;
 
-    console.log("2. กำลังส่งข้อมูลไปหา Google Gemini...");
-    const response = await fetch(url, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }]
-      })
-    });
+    console.log("2. กำลังส่งข้อมูลไปหา Google Gemini 2.5 Flash...");
+    
+    // สั่งให้ AI ประมวลผล
+    const result = await model.generateContent(prompt);
+    const text = result.response.text();
 
-    const data = await response.json();
-
-    if (!response.ok) {
-        console.error("3. Google Error:", JSON.stringify(data, null, 2));
-        return NextResponse.json({ error: "Google API Error" }, { status: response.status });
-    }
-
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "วิเคราะห์ข้อมูลไม่ได้";
-    console.log("3. วิเคราะห์สำเร็จ ส่งกลับไปที่หน้าเว็บ!");
+    console.log("✅ 3. วิเคราะห์สำเร็จ ส่งกลับไปที่หน้าเว็บ!");
     
     return NextResponse.json({ analysis: text });
 
   } catch (error: any) {
-    console.error("Server Error:", error);
+    console.error("🔥 Error จาก SDK:", error.message || error);
     return NextResponse.json({ error: "Server Error" }, { status: 500 });
   }
 }

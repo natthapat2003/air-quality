@@ -146,16 +146,18 @@ export default function Home() {
 
     setIsAiLoading(true);
     setAiAnalysis("✨ กำลังใช้ AI วิเคราะห์ข้อมูลเชิงลึก...");
+    const safeRainChance = rainChance === "--" || rainChance === null ? 0 : Math.round(Number(rainChance));
     try {
       const response = await fetch('/api/gemini', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          pm25: data.pm25,
-          temp: data.temperature,
-          hum: data.humidity,
-          pressure: data.pressure,
-          siteName: nodeNames[data.device_id] || siteName
+          pm25: Math.round(data.pm25),
+          temp: Math.round(data.temperature),
+          hum: Math.round(data.humidity),
+          pressure: Math.round(data.pressure),
+          siteName: nodeNames[data.device_id] || siteName,
+          rainChance: safeRainChance
         }),
       });
       const result = await response.json();
@@ -437,7 +439,6 @@ export default function Home() {
                                   const dName = nodeNames[id] || id;
 
                                   return (
-                                      // 🌟 จุดที่ปรับแก้: เพิ่ม flex: 1 และปรับโครงสร้าง Padding/Line height ให้สมส่วน
                                       <div key={id} style={{ 
                                           display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 14px', 
                                           backgroundColor: isNodeOnline ? '#f0fdf4' : '#fef2f2', borderRadius: '12px', 
@@ -660,14 +661,28 @@ export default function Home() {
                     </div>
                     <span className="ai-title" style={{ fontSize: '15px', fontWeight: '800', color: aiTheme.titleColor, transition: 'all 0.5s ease' }}>AI วิเคราะห์สภาพอากาศ</span>
                 </div>
-                <div className="ai-content" style={{ fontSize: '13.5px', color: '#3f3f46', lineHeight: '1.7', fontWeight: '500', opacity: isAiLoading ? 0.5 : 1, transition: 'opacity 0.3s' }}>
+                <div className="ai-content" style={{ opacity: isAiLoading ? 0.5 : 1, transition: 'opacity 0.3s' }}>
                     <ReactMarkdown
                         components={{
                             strong: ({node, ...props}) => <strong style={{ 
-                                display: 'block', color: aiTheme.strongColor, fontWeight: '900', fontSize: '14px',
-                                marginTop: '12px', marginBottom: '4px', paddingBottom: '4px', borderBottom: `1px dashed ${aiTheme.border}` 
+                                display: 'block', 
+                                color: aiTheme.strongColor, 
+                                fontWeight: '900', 
+                                fontSize: '15px',
+                                marginTop: '16px', 
+                                marginBottom: '6px', 
+                                paddingBottom: '4px', 
+                                borderBottom: `1px dashed ${aiTheme.border}` 
                             }} {...props} />,
-                            p: ({node, ...props}) => <p style={{ marginBottom: '8px' }} {...props} />
+                            p: ({node, ...props}) => <p style={{ 
+                                marginBottom: '12px', 
+                                lineHeight: '1.8', 
+                                fontSize: '14px', 
+                                color: '#4b5563',
+                                fontWeight: '500'
+                            }} {...props} />,
+                            ul: ({node, ...props}) => <ul style={{ paddingLeft: '20px', marginBottom: '10px' }} {...props} />,
+                            li: ({node, ...props}) => <li style={{ marginBottom: '6px', lineHeight: '1.6', fontSize: '14px', color: '#4b5563' }} {...props} />
                         }}
                     >
                         {aiAnalysis?.replace(/\*\*([^*]+):\*\*/g, '**$1**') || ""}
