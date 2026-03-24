@@ -5,7 +5,7 @@ export async function POST(req: Request) {
     const body = await req.json();
     console.log("1. ข้อมูลที่ได้รับจากหน้าเว็บ:", body);
     
-    const apiKey = "AIzaSyBE0slETSi38afR8eAepfBNAWGT5ywRGxE";
+    const apiKey = process.env.GOOGLE_GEMINI_API_KEY;
 
     //const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent?key=${apiKey}`;
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
