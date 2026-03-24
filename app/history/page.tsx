@@ -498,7 +498,6 @@ export default function HistoryPage() {
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <MapPin size={16} color="#3b82f6" />
-                {/* 🌟 จุดที่แก้ไข: ปลดล็อคความกว้าง ปล่อยให้มันยืดแสดงชื่อเต็มแบบไม่มีตัด */}
                 <select
                   value={selectedNodeFilter}
                   onChange={(e) => setSelectedNodeFilter(e.target.value)}
@@ -845,79 +844,12 @@ export default function HistoryPage() {
             .card { padding: 20px 15px !important; }
             .header-row { flex-direction: column !important; align-items: stretch !important; gap: 15px !important; }
             .filter-group { justify-content: space-between !important; padding: 10px 12px !important; }
-            .action-buttons { width: 100%; }
-            .btn-export, .btn-config, .btn-clear { flex: 1; justify-content: center; padding: 10px !important; }
+            .action-buttons { width: 100%; flex-wrap: wrap; }
+            .btn-export, .btn-config, .btn-clear { flex: 1; justify-content: center; padding: 10px !important; min-width: 120px; }
             
             .stats-grid { grid-template-columns: 1fr 1fr !important; gap: 10px !important; }
             .stat-card { padding: 15px !important; gap: 8px !important; }
             .stat-card > div:last-child { font-size: 22px !important; }
-
-            .table-responsive {
-                border: none !important;
-                background: transparent !important;
-                overflow-x: hidden !important; 
-            }
-            table, thead, tbody, th, td, tr {
-                display: block;
-                width: 100%;
-            }
-            thead tr {
-                display: none;
-            }
-            tr {
-                background-color: #ffffff !important;
-                border: 1px solid #e2e8f0 !important;
-                border-radius: 20px !important;
-                margin-bottom: 16px !important;
-                padding: 10px 16px !important;
-                box-shadow: 0 4px 15px -5px rgba(0,0,0,0.05) !important;
-            }
-            tr:last-child { margin-bottom: 0 !important; }
-            
-            td {
-                border: none !important;
-                border-bottom: 1px dashed #f1f5f9 !important;
-                position: relative !important;
-                padding: 12px 0 12px 42% !important; 
-                text-align: right !important;
-                min-height: 24px;
-                display: flex !important;
-                justify-content: flex-end !important;
-                align-items: center !important;
-            }
-            td, td span {
-                white-space: normal !important;
-                word-break: break-word !important;
-            }
-            td:last-child {
-                border-bottom: none !important;
-                padding-bottom: 4px !important;
-            }
-            td::before {
-                content: attr(data-label);
-                position: absolute;
-                left: 0;
-                top: 50%;
-                transform: translateY(-50%);
-                width: 40%;
-                text-align: left;
-                font-weight: 800;
-                color: #94a3b8;
-                font-size: 13px;
-                line-height: 1.3;
-            }
-            .pm-badge-wrapper {
-                justify-content: flex-end !important;
-                width: 100%;
-            }
-            td[colspan] {
-                padding: 40px 20px !important;
-                text-align: center !important;
-                justify-content: center !important;
-            }
-            td[colspan]::before {
-                display: none !important;
-            }
         }
 
         @media (min-width: 769px) {
