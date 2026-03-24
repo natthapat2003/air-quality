@@ -238,11 +238,16 @@ export default function Home() {
 
       await fetchNodeNames();
 
-      const { data: sensorData } = await supabase.from('sensor_data').select('*').order('created_at', { ascending: false }).limit(50);
+      // 🌟 1. ดึงข้อมูลจาก 2 ตารางพร้อมกัน (ของจริง + Mockup)
+      const { data: realData } = await supabase.from('sensor_data').select('*').order('created_at', { ascending: false }).limit(50);
+      const { data: mockData } = await supabase.from('sensor_data2').select('*').order('created_at', { ascending: false }).limit(50);
       
-      if (sensorData && sensorData.length > 0) {
+      // 🌟 2. เอาข้อมูล 2 ตารางมาเทรวมกัน แล้วเรียงลำดับเวลาใหม่
+      const allSensorData = [...(realData || []), ...(mockData || [])].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      
+      if (allSensorData && allSensorData.length > 0) {
           const initialNodes: Record<string, any> = {};
-          sensorData.forEach(row => {
+          allSensorData.forEach(row => {
               const id = row.device_id || 'NODE_01';
               if (!initialNodes[id]) { 
                   initialNodes[id] = { ...row, displayTime: new Date(row.created_at).toLocaleTimeString('th-TH') };
@@ -257,7 +262,7 @@ export default function Home() {
           }
           
           setHasInit(true);
-          const lastRecordTime = new Date(sensorData[0].created_at).getTime();
+          const lastRecordTime = new Date(allSensorData[0].created_at).getTime();
           const currentTime = new Date().getTime();
           const timeDiff = currentTime - lastRecordTime;
 
@@ -286,8 +291,16 @@ export default function Home() {
         fetchInitialData();
     });
 
-    const channel = supabase.channel('public:sensor_data')
+    // 🌟 ดักจับข้อมูลเข้าใหม่จากตารางของจริง
+    const channel1 = supabase.channel('public:sensor_data')
         .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sensor_data' }, (payload) => {
+            updateNodeData(payload.new);
+        })
+        .subscribe();
+
+    // 🌟 ดักจับข้อมูลเข้าใหม่จากตารางจำลอง (Mockup)
+    const channel2 = supabase.channel('public:sensor_data2')
+        .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'sensor_data2' }, (payload) => {
             updateNodeData(payload.new);
         })
         .subscribe();
@@ -303,7 +316,8 @@ export default function Home() {
         .subscribe();
 
     return () => {
-        supabase.removeChannel(channel);
+        supabase.removeChannel(channel1);
+        supabase.removeChannel(channel2); // 🌟 ล้างการดักจับตาราง 2
         supabase.removeChannel(channelConfig);
         if (timeoutRef.current) clearTimeout(timeoutRef.current);
     };
