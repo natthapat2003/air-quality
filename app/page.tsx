@@ -163,6 +163,8 @@ export default function Home() {
       const result = await response.json();
       if (result.analysis) {
         setAiAnalysis(result.analysis);
+      } else if (result.error) {
+        setAiAnalysis(`⚠️ ระบบหลังบ้านแจ้งว่า: ${result.error}`); 
       } else {
         setAiAnalysis("ไม่สามารถดึงข้อมูลวิเคราะห์ได้ในขณะนี้");
       }
