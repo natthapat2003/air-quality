@@ -223,7 +223,8 @@ export default function Home() {
       setIsOnline(true);
       
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      timeoutRef.current = setTimeout(() => setIsOnline(false), 90000);
+      // 🌟 แก้เป็น 35 นาที (2100000 ms)
+      timeoutRef.current = setTimeout(() => setIsOnline(false), 2100000);
 
       if (id === selectedNodeId) {
           fetchRainForecast(newData.lat || 16.4477, newData.lng || 103.5314);
@@ -265,10 +266,11 @@ export default function Home() {
           const currentTime = new Date().getTime();
           const timeDiff = currentTime - lastRecordTime;
 
-          if (timeDiff <= 90000) { 
+          // 🌟 แก้เป็น 35 นาที (2100000 ms)
+          if (timeDiff <= 2100000) { 
               setIsOnline(true);
               if (timeoutRef.current) clearTimeout(timeoutRef.current);
-              timeoutRef.current = setTimeout(() => setIsOnline(false), 90000 - timeDiff); 
+              timeoutRef.current = setTimeout(() => setIsOnline(false), 2100000 - timeDiff); 
           } else {
               setIsOnline(false); 
           }
@@ -329,7 +331,8 @@ export default function Home() {
           if (hiddenNodes.includes(id)) return;
 
           const nowMs = new Date().getTime();
-          const isNodeOnline = node.created_at ? (nowMs - new Date(node.created_at).getTime()) <= 120000 : false;
+          // 🌟 แก้เป็น 35 นาที (2100000 ms)
+          const isNodeOnline = node.created_at ? (nowMs - new Date(node.created_at).getTime()) <= 2100000 : false;
           if (!isNodeOnline) return;
 
           const latlng: [number, number] = [node.lat || 16.4477, node.lng || 103.5314];
@@ -367,7 +370,8 @@ export default function Home() {
   const nowMs = new Date().getTime();
   const activeNodesCount = Object.values(nodesData).filter((node: any) => {
       if (!node.created_at) return true;
-      return (nowMs - new Date(node.created_at).getTime()) <= 120000; 
+      // 🌟 แก้เป็น 35 นาที (2100000 ms)
+      return (nowMs - new Date(node.created_at).getTime()) <= 2100000; 
   }).length;
   
   const totalNodesCount = Object.keys(nodesData).length;
@@ -437,7 +441,8 @@ export default function Home() {
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                               {Object.values(nodesData).map((node: any) => {
                                   const id = node.device_id || 'NODE_01';
-                                  const isNodeOnline = node.created_at ? (new Date().getTime() - new Date(node.created_at).getTime()) <= 120000 : false;
+                                  // 🌟 แก้เป็น 35 นาที (2100000 ms)
+                                  const isNodeOnline = node.created_at ? (new Date().getTime() - new Date(node.created_at).getTime()) <= 2100000 : false;
                                   const dName = nodeNames[id] || id;
 
                                   return (

@@ -11,25 +11,9 @@ import {
   Eye, EyeOff, Save, FileSpreadsheet, Calendar, ChevronLeft, ChevronRight, Minus, Menu
 } from 'lucide-react';
 
-import {
-  Chart as ChartJS,
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend,
-} from 'chart.js';
-import { Bar } from 'react-chartjs-2';
-
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  BarElement,
-  Title,
-  Tooltip,
-  Legend
-);
+// 🌟 Import กราฟ TrendChart ที่เราสร้างไว้ (แก้ไข Path ให้ตรงกับโฟลเดอร์ที่คุณเซฟไฟล์ไว้นะครับ)
+// เช่น '../components/TrendChart' หรือ '@/components/TrendChart'
+import TrendChart from '../components/TrendChart';
 
 const ProStatCard = ({ icon, title, value, color }: any) => (
   <div className="stat-card"
@@ -290,40 +274,31 @@ export default function HistoryPage() {
     return sortConfig.direction === 'asc' ? <ArrowUp size={16} color="#2563eb" strokeWidth={3} /> : <ArrowDown size={16} color="#2563eb" strokeWidth={3} />;
   };
 
-  const MAX_CHART_ITEMS = 100;
-  const chartDataReversed = [...filteredData].slice(0, MAX_CHART_ITEMS).reverse();
-  
-  const chartData = {
-    labels: chartDataReversed.map(d => d.timestamp ? d.timestamp.split(' ')[1] : '-'),
-    datasets: [
-      {
-        label: 'ค่าฝุ่น PM2.5 (µg/m³)',
-        data: chartDataReversed.map(d => d.pm25),
-        backgroundColor: chartDataReversed.map(d => {
-          const v = d.pm25 || 0;
-          if (v <= 15) return 'rgba(14, 165, 233, 0.85)';
-          if (v <= 25) return 'rgba(16, 185, 129, 0.85)';
-          if (v <= 37) return 'rgba(245, 158, 11, 0.85)';
-          if (v <= 75) return 'rgba(249, 115, 22, 0.85)';
-          return 'rgba(239, 68, 68, 0.85)';
-        }),
-        borderRadius: 4,
-        borderWidth: 0,
-      }
-    ]
-  };
+  // 🌟 จัดรูปแบบข้อมูลให้กราฟ (ปลดล็อก ไม่จำกัดจำนวนข้อมูลแล้ว ดึงตาม Filter เลย)
+  const trendChartData = [...filteredData].reverse().map(d => {
+    let timeLabel = '-';
+    
+    if (d.timestamp) {
+      const parts = d.timestamp.split(' '); 
+      const datePart = parts[0]; 
+      const timePart = parts[1] ? parts[1].substring(0, 5) : ''; 
 
-  const chartOptions = {
-    responsive: true, maintainAspectRatio: false,
-    plugins: {
-      legend: { display: false }, title: { display: false },
-      tooltip: { backgroundColor: 'rgba(15, 23, 42, 0.9)', titleFont: { family: 'Sarabun', size: 13 }, bodyFont: { family: 'Sarabun', size: 14, weight: 'bold' as const }, padding: 12, cornerRadius: 8, displayColors: false }
-    },
-    scales: {
-      y: { beginAtZero: true, suggestedMax: 200, grid: { color: '#f1f5f9' }, ticks: { font: { family: 'Sarabun' }, color: '#64748b' } },
-      x: { grid: { display: false }, ticks: { font: { family: 'Sarabun' }, color: '#64748b', autoSkip: true, maxRotation: 45, minRotation: 45 } }
+      if (filterType === 'day') {
+        timeLabel = timePart; 
+      } else {
+        const shortDate = datePart.substring(0, 5); 
+        timeLabel = `${shortDate} ${timePart}`; 
+      }
     }
-  };
+
+    return {
+      time: timeLabel,
+      pm25: d.pm25 != null ? Math.round(d.pm25) : null,
+      temperature: d.temperature != null ? Math.round(d.temperature) : null,
+      humidity: d.humidity != null ? Math.round(d.humidity) : null,
+      pressure: d.pressure != null ? Math.round(d.pressure) : null
+    };
+  });
 
   const handleExportCSV = () => {
     if (filteredData.length === 0) { alert("ไม่มีข้อมูลที่จะ Export"); return; }
@@ -583,21 +558,13 @@ export default function HistoryPage() {
             <ProStatCard icon={<Database size={18} color="#3b82f6" />} title="จำนวนข้อมูล" value={isLoadingData ? '...' : stats.count} color="#3b82f6" />
           </div>
 
-          <div style={{ marginTop: '20px', padding: '20px', backgroundColor: '#ffffff', borderRadius: '16px', border: '1px solid #f1f5f9', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)', boxSizing: 'border-box' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '20px' }}>
-              <Activity size={18} color="#64748b" />
-              <h3 style={{ fontSize: '15px', fontWeight: '800', color: '#475569', margin: 0, letterSpacing: '0.2px' }}>
-                กราฟแท่งแสดงแนวโน้มฝุ่น PM2.5
-                <span style={{ fontWeight: '600', color: '#94a3b8', marginLeft: '6px' }}>
-                  ({filteredData.length > MAX_CHART_ITEMS ? `แสดง ${MAX_CHART_ITEMS} รายการล่าสุดจากทั้งหมด ${filteredData.length}` : `${filteredData.length} รายการ`})
-                </span>
-              </h3>
-            </div>
-            <div style={{ overflowX: 'auto', paddingBottom: '15px', WebkitOverflowScrolling: 'touch' }}>
-              <div style={{ height: '350px', minWidth: `${Math.max(600, chartDataReversed.length * 15)}px` }}>
-                <Bar data={chartData} options={chartOptions as any} />
-              </div>
-            </div>
+          {/* 🌟 แสดงกราฟ TrendChart แทรกตรงนี้เลย */}
+          <div style={{ marginTop: '20px' }}>
+            {trendChartData.length > 0 ? (
+               <TrendChart data={trendChartData} />
+            ) : (
+               <div style={{ textAlign: 'center', padding: '40px', background: '#f8fafc', borderRadius: '24px', color: '#94a3b8' }}>ไม่มีข้อมูลสำหรับสร้างกราฟ</div>
+            )}
           </div>
 
           <div className="table-responsive" style={{ 
