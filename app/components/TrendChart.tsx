@@ -5,7 +5,7 @@ import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { Clock } from 'lucide-react';
 
 const PARAMS = [
-  { key: 'pm25',        label: 'ฝุ่น PM2.5',      color: '#ef4444' }, 
+  { key: 'pm25',        label: 'PM2.5',      color: '#ef4444' }, 
   { key: 'temperature', label: 'อุณหภูมิ',        color: '#f59e0b' }, 
   { key: 'humidity',    label: 'ความชื้น',        color: '#3b82f6' }, 
   { key: 'pressure',    label: 'ความกดอากาศ',     color: '#8b5cf6' }, 

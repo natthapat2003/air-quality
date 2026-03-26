@@ -11,11 +11,10 @@ import {
   Eye, EyeOff, Save, FileSpreadsheet, Calendar, ChevronLeft, ChevronRight, Minus, Menu
 } from 'lucide-react';
 
-// 🌟 Import กราฟ TrendChart ที่เราสร้างไว้ (แก้ไข Path ให้ตรงกับโฟลเดอร์ที่คุณเซฟไฟล์ไว้นะครับ)
-// เช่น '../components/TrendChart' หรือ '@/components/TrendChart'
 import TrendChart from '../components/TrendChart';
 
-const ProStatCard = ({ icon, title, value, color }: any) => (
+// 🌟 ปรับปรุง ProStatCard ให้รับค่า unit เพิ่ม และจัด Layout แบบ Flex baseline
+const ProStatCard = ({ icon, title, value, color, unit }: any) => (
   <div className="stat-card"
     style={{
       backgroundColor: '#ffffff',
@@ -36,8 +35,10 @@ const ProStatCard = ({ icon, title, value, color }: any) => (
       {icon}
       {title}
     </div>
-    <div style={{ fontSize: '28px', fontWeight: '900', color: color, lineHeight: '1' }}>
+    <div style={{ fontSize: '28px', fontWeight: '900', color: color, lineHeight: '1', display: 'flex', alignItems: 'baseline', gap: '6px' }}>
       {value}
+      {/* 🌟 แสดงหน่วย (Unit) ถ้ามีการส่งค่ามา */}
+      {unit && <span style={{ fontSize: '14px', fontWeight: '700', color: '#94a3b8' }}>{unit}</span>}
     </div>
   </div>
 );
@@ -274,7 +275,6 @@ export default function HistoryPage() {
     return sortConfig.direction === 'asc' ? <ArrowUp size={16} color="#2563eb" strokeWidth={3} /> : <ArrowDown size={16} color="#2563eb" strokeWidth={3} />;
   };
 
-  // 🌟 จัดรูปแบบข้อมูลให้กราฟ (ปลดล็อก ไม่จำกัดจำนวนข้อมูลแล้ว ดึงตาม Filter เลย)
   const trendChartData = [...filteredData].reverse().map(d => {
     let timeLabel = '-';
     
@@ -547,18 +547,37 @@ export default function HistoryPage() {
           </div>
 
           <div className="stats-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '15px' }}>
+            {/* 🌟 เรียกใช้ ProStatCard พร้อมแนบ unit เข้าไปด้วย และเปลี่ยนชื่อ Card */}
             <ProStatCard
               icon={<Activity size={18} color="#64748b" />}
               title="ค่าเฉลี่ย PM2.5"
               value={stats.avg}
               color={Number(stats.avg) <= 50 ? '#10b981' : Number(stats.avg) <= 100 ? '#f59e0b' : '#ef4444'}
+              unit="µg/m³"
             />
-            <ProStatCard icon={<TrendingUp size={18} color="#ef4444" />} title="ค่าสูงสุด (Max)" value={stats.max === -Infinity ? '--' : stats.max} color="#ef4444" />
-            <ProStatCard icon={<TrendingDown size={18} color="#10b981" />} title="ค่าต่ำสุด (Min)" value={stats.min === Infinity ? '--' : stats.min} color="#10b981" />
-            <ProStatCard icon={<Database size={18} color="#3b82f6" />} title="จำนวนข้อมูล" value={isLoadingData ? '...' : stats.count} color="#3b82f6" />
+            <ProStatCard 
+              icon={<TrendingUp size={18} color="#ef4444" />} 
+              title="ฝุ่นสูงสุด (Max)" 
+              value={stats.max === -Infinity ? '--' : stats.max} 
+              color="#ef4444" 
+              unit="µg/m³"
+            />
+            <ProStatCard 
+              icon={<TrendingDown size={18} color="#10b981" />} 
+              title="ฝุ่นต่ำสุด (Min)" 
+              value={stats.min === Infinity ? '--' : stats.min} 
+              color="#10b981" 
+              unit="µg/m³"
+            />
+            <ProStatCard 
+              icon={<Database size={18} color="#3b82f6" />} 
+              title="จำนวนข้อมูล" 
+              value={isLoadingData ? '...' : stats.count} 
+              color="#3b82f6" 
+              unit="รายการ"
+            />
           </div>
 
-          {/* 🌟 แสดงกราฟ TrendChart แทรกตรงนี้เลย */}
           <div style={{ marginTop: '20px' }}>
             {trendChartData.length > 0 ? (
                <TrendChart data={trendChartData} />
