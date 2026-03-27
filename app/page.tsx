@@ -106,8 +106,8 @@ const LegendItem = ({ color, text, advice }: { color: string, text: string, advi
 );
 
 const MAP_STYLES = {
-    street: { name: 'แผนที่ถนน (Street)', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' },
-    satellite: { name: 'ดาวเทียม (Satellite)', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}' }
+    street: { name: 'ค่าเริ่มต้น', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png' },
+    satellite: { name: 'ดาวเทียม', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}' }
 };
 
 export default function Home() {
@@ -223,7 +223,6 @@ export default function Home() {
       setIsOnline(true);
       
       if (timeoutRef.current) clearTimeout(timeoutRef.current);
-      // 🌟 แก้เป็น 35 นาที (2100000 ms)
       timeoutRef.current = setTimeout(() => setIsOnline(false), 2100000);
 
       if (id === selectedNodeId) {
@@ -266,7 +265,6 @@ export default function Home() {
           const currentTime = new Date().getTime();
           const timeDiff = currentTime - lastRecordTime;
 
-          // 🌟 แก้เป็น 35 นาที (2100000 ms)
           if (timeDiff <= 2100000) { 
               setIsOnline(true);
               if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -331,7 +329,6 @@ export default function Home() {
           if (hiddenNodes.includes(id)) return;
 
           const nowMs = new Date().getTime();
-          // 🌟 แก้เป็น 35 นาที (2100000 ms)
           const isNodeOnline = node.created_at ? (nowMs - new Date(node.created_at).getTime()) <= 2100000 : false;
           if (!isNodeOnline) return;
 
@@ -370,11 +367,18 @@ export default function Home() {
   const nowMs = new Date().getTime();
   const activeNodesCount = Object.values(nodesData).filter((node: any) => {
       if (!node.created_at) return true;
-      // 🌟 แก้เป็น 35 นาที (2100000 ms)
       return (nowMs - new Date(node.created_at).getTime()) <= 2100000; 
   }).length;
   
   const totalNodesCount = Object.keys(nodesData).length;
+
+  let globalLastUpdate = '--:--:--';
+  const validTimes = Object.values(nodesData)
+    .map((n: any) => n.created_at ? new Date(n.created_at).getTime() : 0)
+    .filter(t => t > 0);
+  if (validTimes.length > 0) {
+    globalLastUpdate = new Date(Math.max(...validTimes)).toLocaleTimeString('th-TH');
+  }
 
   const toolButtonStyle = {
     backgroundColor: 'rgba(255, 255, 255, 0.95)', backdropFilter: 'blur(10px)',
@@ -409,7 +413,9 @@ export default function Home() {
               
               <div className="nav-divider desktop-only"></div> 
               
-              <div style={{ position: 'relative' }}>
+              <div style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                  
+                  {/* 🌟 ปุ่มสถานะออนไลน์ (ซ่อนเวลาไว้ ให้โชว์แค่ตอนคลิก Dropdown) */}
                   <div className="status-pill" onClick={() => setShowStatusMenu(!showStatusMenu)} style={{
                       display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer',
                       padding: '6px 14px', borderRadius: '20px', transition: '0.2s',
@@ -422,7 +428,11 @@ export default function Home() {
                   onMouseOut={(e) => { e.currentTarget.style.transform = 'scale(1)'; }}>
                       {!hasInit ? <Loader size={14} className="spin-icon" /> : (isOnline ? <Activity size={14} strokeWidth={3} className="pulse-icon" /> : <WifiOff size={14} strokeWidth={3} />)}
                       <span className="status-text">
-                          {!hasInit ? 'กำลังเชื่อม...' : (isOnline ? `ออนไลน์ ${activeNodesCount}/${totalNodesCount > 0 ? totalNodesCount : 1}` : 'ออฟไลน์')}
+                          {!hasInit ? 'กำลังเชื่อม...' : (
+                              isOnline ? 
+                              `ออนไลน์ ${activeNodesCount}/${totalNodesCount > 0 ? totalNodesCount : 1}` 
+                              : 'ออฟไลน์'
+                          )}
                       </span>
                       <ChevronDown size={14} className="desktop-only" style={{ marginLeft: '2px', opacity: 0.8 }} />
                   </div>
@@ -435,13 +445,15 @@ export default function Home() {
                           padding: '16px', width: '320px', boxShadow: '0 10px 40px -10px rgba(0,0,0,0.15)', zIndex: 1002,
                           boxSizing: 'border-box'
                       }}>
-                          <div style={{ fontSize: '12px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                              <Activity size={14} /> สถานะจุดตรวจวัดทั้งหมด
+                          {/* 🌟 แสดงเวลาอัปเดตล่าสุด ในเมนู Dropdown */}
+                          <div style={{ fontSize: '12px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.5px', marginBottom: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}><Activity size={14} /> สถานะจุดตรวจวัดทั้งหมด</span>
+                              <span style={{ fontSize: '10px', fontWeight: '700', color: '#94a3b8', textTransform: 'none' }}>ล่าสุด: {globalLastUpdate}</span>
                           </div>
+
                           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                               {Object.values(nodesData).map((node: any) => {
                                   const id = node.device_id || 'NODE_01';
-                                  // 🌟 แก้เป็น 35 นาที (2100000 ms)
                                   const isNodeOnline = node.created_at ? (new Date().getTime() - new Date(node.created_at).getTime()) <= 2100000 : false;
                                   const dName = nodeNames[id] || id;
 
